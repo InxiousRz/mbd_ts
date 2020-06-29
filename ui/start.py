@@ -1,7 +1,6 @@
 
 import frame_main
 import wx
-from temp_sql_module import TempQuerySQL
 
 
 class Starter(frame_main.frame_main):

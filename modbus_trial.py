@@ -1,4 +1,8 @@
 import minimalmodbus
+import json
+import threading
+import serial
+from time import sleep
 
 ## Outer Module
 # from sub_modules.controller_mod import Controle
@@ -18,7 +22,7 @@ class Modbus_Mod():
         #     ##-----------------------------------
         #     # "#deviceattachid":{
         #     #     "comm_type":"MODBUS",
-        #     #     "types":"A",
+        #     #     "comm_type":"A",
         #     #     "decimal_point":0,
         #     #     "modbusslaveid":1,
         #     #     "slave_id":1,
@@ -33,6 +37,11 @@ class Modbus_Mod():
         #     # }
         # }
 
+        with open("ui\db\data_main.json", "r") as jsonfile:
+            self._modbus_devices = json.load(jsonfile)
+
+        print(self._modbus_devices) 
+
         try:
             for deviceattachdetailid in self._modbus_devices:
 
@@ -44,7 +53,8 @@ class Modbus_Mod():
 
                 #Create Instrument
                 serial_port = device_activity_data['port']
-                client_ok, result = self.CreateInstrument(serial_port)
+                slave_id = device_activity_data['slave_id']
+                client_ok, result = self.CreateInstrument(slave_id=slave_id,port=serial_port)
                 if client_ok:
 
                     #Add Insrument to Data
@@ -65,8 +75,8 @@ class Modbus_Mod():
 
         except Exception as e:
             print(e)
-
-        self.DataReader()
+        else:
+            self.DataReader()
 
     def threaded(fn):
         def wrapper(*args, **kwargs):
@@ -78,11 +88,11 @@ class Modbus_Mod():
 
         return (wrapper)
 
-    def CreateInstrument(self, port, baudrate=9600):
+    def CreateInstrument(self, slave_id, port, baudrate=9600):
         try:
             instrument = minimalmodbus.Instrument(
                 port=str(port),
-                slaveaddress=1)  # port name, slave address (in decimal)
+                slaveaddress=int(slave_id))  # port name, slave address (in decimal)
 
             instrument.mode = minimalmodbus.MODE_RTU  # rtu or ascii mode
             instrument.clear_buffers_before_each_transaction = True
@@ -91,11 +101,13 @@ class Modbus_Mod():
             instrument.serial.bytesize = 8
             instrument.serial.parity = serial.PARITY_NONE
             instrument.serial.stopbits = 1
-            instrument.serial.timeout = 0.05  # seconds
+            instrument.serial.timeout = 0.5  # seconds
+            
         except Exception as e:
             print(f'Create Modbus Master ERROR :: {e}')
             return (False, e)
         else:
+            # print(instrument)
             return (True, instrument)
 
     def ReadRegister(self, registeraddress, instrument):
@@ -110,32 +122,104 @@ class Modbus_Mod():
         else:
             return (True, data)
 
+    def ReadRegisters(self, start, end, instrument):
+        try:
+            data = instrument.read_registers(registeraddress=int(start),
+            number_of_registers=int(end)-int(start)+1, functioncode=3)
+        except Exception as e:
+            print(f'Read Registers {start} -> {end} :: {int(end)-int(start)} ERROR :: {e}')
+            return (False, e)
+        else:
+            # Convert to Hex
+            print(f'Read Registers {start} -> {end} :: {int(end)-int(start)} OK ')
+            data = [hex(x)[2:] for x in data]
+            return (True, data)
+
     def ReadJob(self, deviceattachdetailid, read_type):
 
-        task_list = self._modbus_activity[deviceattachdetailid][
-            'register_data']
-        read_type = self._modbus_activity[deviceattachdetailid]['types']
-        task_order = list(task_list.keys()).sort()
+        # task_list = self._modbus_activity[deviceattachdetailid][
+        #     'register_data']
+        # read_type = self._modbus_activity[deviceattachdetailid]['comm_type']
+        # task_order = list(task_list.keys())
+        # task_order.sort()
 
-        read_result = []
-        for task_id in task_order:
-            task_data = task_list[task_id]
+        # read_result = []
+        # # READ ONE BY ONE [A / B IS THE SAME]
+        # for task_id in task_order:
+        #     task_data = task_list[task_id]
 
-            register = task_data['register_address']
+        #     register = task_data['register_address']
+        #     instrument = self._modbus_activity[deviceattachdetailid][
+        #         'instrument']
+        #     read_ok, data = self.ReadRegister(registeraddress=register,
+        #                                       instrument=instrument)
+
+        #     if read_ok:
+        #         read_result.append(data)
+        #     else:
+        #         return (False, None)
+
+        ## READ UNDER RULE OF A AND B
+        if read_type == "A":
+            #Instrument
             instrument = self._modbus_activity[deviceattachdetailid][
                 'instrument']
+            
+            #Read One
+            task_data = list(self._modbus_activity[deviceattachdetailid][
+            'register_data'].keys())[0]
+            register = task_data['register_address']
             read_ok, data = self.ReadRegister(registeraddress=register,
                                               instrument=instrument)
 
             if read_ok:
                 read_result.append(data)
             else:
-                return (None)
+                return (False, None)
+
+        elif read_type == "B":
+            #Instrument
+            instrument = self._modbus_activity[deviceattachdetailid][
+                'instrument']
+
+            #Well this only for convinient
+            register_order = [ int(x) for x in list(self._modbus_activity[deviceattachdetailid][
+            'register_data'].keys()) ]
+            register_order.sort()
+
+            #Get all Register address
+            register_address_list = []
+            for seq in register_order:
+                register_data = self._modbus_activity[deviceattachdetailid]['register_data'][str(seq)]
+                register_addr = register_data['register_address']
+                register_address_list.append(register_addr)
+
+            
+            #order it up
+            min_reg = min(register_address_list)
+            max_reg = max(register_address_list)
+
+            read_ok, data = self.ReadRegisters(start=min_reg,
+                                                end=max_reg,
+                                              instrument=instrument)
+            print(data)
+
+            if read_ok:
+                #Pickup only the used data and by seq order
+                read_result = []
+                for seq in register_order:
+                    register_data = self._modbus_activity[deviceattachdetailid]['register_data'][str(seq)]
+                    register_addr = register_data['register_address']
+                    data_for_you = data[int(register_addr)-int(min_reg)]
+                    read_result.append(str(data_for_you))
+        
+            else:
+                return (False, None)
 
         #Reform Data
         formated_data = self.ReformData(read_data=read_result,
                                         read_type=read_type)
-        return (formated_data)
+        return (True, formated_data)
 
     def ReformData(self, read_data, read_type):
 
@@ -180,17 +264,22 @@ class Modbus_Mod():
         while True:
 
             for act_id in self._modbus_activity:
-
-                self.ReadJob(deviceattachdetailid=act_id)
+                datas = self._modbus_activity[act_id]
+                read_ok, data = self.ReadJob(deviceattachdetailid=act_id, read_type=datas["comm_type"])
 
                 if read_ok:
-                    self.DataFilter(slave_id=slave_id,
-                                    device_data=device_data,
-                                    value=data)
+                    # self.DataFilter(deviceattachdetailid=act_id,
+                    #                 value=data)
+                    print(f"from :: {data} : to : {int(data, 16)}")
 
-                sleep(0.25)
+                # sleep(0.25)
+                print("=================================================")
+                print(str(datas["devicename"]))
+                sleep(5)
 
 
 
 if __name__ == "__main__":
     a = Modbus_Mod()
+    while True:
+        pass

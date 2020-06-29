@@ -1,0 +1,1 @@
+{"2": {"devicename": "FLOWRATE", "slave_id": "200", "port": "COM1", "comm_type": "B", "decimal_point": 0, "register_data": {"10": {"sequence": "10", "register_address": 1, "register_alias": "DATA FLOW 01"}, "20": {"sequence": "20", "register_address": 2, "register_alias": "DATA FLOW 02"}}}}
