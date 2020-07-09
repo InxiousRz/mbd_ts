@@ -2,7 +2,7 @@ import json
 import os
 
 class DB_Sim():
-    _db_data_main = "db\\data_main.json"
+    _db_data_main = ".\\ui\\db\\data_main.json"
 
     def __init__(self):
         pass    

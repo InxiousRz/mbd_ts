@@ -1,9 +1,9 @@
 
-import frame_main
+from ui.frame_main import frame_main
 import wx
 
 
-class Starter(frame_main.frame_main):
+class Starter(frame_main):
     def __init__(self):
         super().__init__(None)
 

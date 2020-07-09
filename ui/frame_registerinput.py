@@ -9,7 +9,7 @@
 
 import wx
 import wx.xrc
-from db_simulator import DB_Sim as dbs
+from ui.db_simulator import DB_Sim as dbs
 
 
 
@@ -20,7 +20,7 @@ from db_simulator import DB_Sim as dbs
 class frame_register_input ( ):
 
 	def __init__( self, parent ):
-		self._frame_registerinput = wx.Frame( parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 652,368 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+		self._frame_registerinput = wx.Frame( parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 652,368 ), style = wx.CAPTION|wx.TAB_TRAVERSAL )
 
 		self._frame_registerinput.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
 		self._frame_registerinput.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
@@ -106,7 +106,6 @@ class frame_register_input ( ):
 
 	def __del__( self ):
 		pass
-		
 
 
 	# Virtual event handlers, overide them in your derived class

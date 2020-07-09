@@ -3,12 +3,11 @@ import json
 import threading
 import serial
 from time import sleep
+import datetime
+import configparser
+import struct
 
-## Outer Module
-# from sub_modules.controller_mod import Controle
-
-## Inner Member
-# from behavior.sensor_reader_store import SensorReader_Storage
+from temp_sql_module import TempQuerySQL
 
 
 class Modbus_Mod():
@@ -16,6 +15,9 @@ class Modbus_Mod():
         super().__init__()
 
         self._modbus_activity = {}
+        self._DeviceValues_Filtered = {}
+
+        self._DirectDB = TempQuerySQL()
         # self._modbus_devices =  = {
         #     ##-----------------------------------
         #     ##EXAMPLES
@@ -36,6 +38,11 @@ class Modbus_Mod():
         #     #     }
         #     # }
         # }
+
+        #SETTINGS
+        self._config = configparser.ConfigParser()
+        self._config.read_file(open("modb_conf.cfg"))
+        
 
         with open("ui\db\data_main.json", "r") as jsonfile:
             self._modbus_devices = json.load(jsonfile)
@@ -70,6 +77,9 @@ class Modbus_Mod():
                     self._modbus_activity[
                         deviceattachdetailid] = device_activity_data
 
+                    #Add filtered
+                    self._DeviceValues_Filtered[deviceattachdetailid] = None
+
                 else:
                     raise Exception("Failed to Create Instrument")
 
@@ -77,6 +87,7 @@ class Modbus_Mod():
             print(e)
         else:
             self.DataReader()
+            # self.DataRecorder()
 
     def threaded(fn):
         def wrapper(*args, **kwargs):
@@ -98,10 +109,10 @@ class Modbus_Mod():
             instrument.clear_buffers_before_each_transaction = True
 
             instrument.serial.baudrate = baudrate  # Baud
-            instrument.serial.bytesize = 8
+            instrument.serial.bytesize = int(self._config.get("MOBUS_GENERAL","bytesize"))
             instrument.serial.parity = serial.PARITY_NONE
-            instrument.serial.stopbits = 1
-            instrument.serial.timeout = 0.5  # seconds
+            instrument.serial.stopbits = int(self._config.get("MOBUS_GENERAL","stopbits"))
+            instrument.serial.timeout = float(self._config.get("MOBUS_GENERAL","timeout"))
             
         except Exception as e:
             print(f'Create Modbus Master ERROR :: {e}')
@@ -225,14 +236,30 @@ class Modbus_Mod():
 
         if str(read_type).upper() == "A":
             result = read_data[0]
+            result = struct.unpack('!f', bytes.fromhex(str(result)))[0]
 
         elif str(read_type).upper() == "B":
             result = ''
-            for i in range(len(read_data)):
-                result += read_data[i]
 
-            #Reverse
-            result = result[::-1]
+            #Original
+            # result_container = []
+            
+            # for i in range(len(read_data)):
+            #     # result += read_data[i]
+            #     word = read_data[i]
+            #     for i in range(0, len(word), 2):
+            #         result_container.append(word[i:i+2])
+
+            # #Reverse
+            # for item in result_container[::-1]:
+            #     result += item
+
+            #New 
+            lenght_data = len(read_data)
+            for i in range(lenght_data):
+                result += read_data[(lenght_data-1)-i]
+
+            result = struct.unpack('!f', bytes.fromhex(str(result)))[0]
 
         return (result)
 
@@ -253,30 +280,50 @@ class Modbus_Mod():
                 'raw_data'].append(value)
 
         #Set Filtered
-        keyword = self._DeviceAttachedMap_byID[deviceattachdetailid]
-        self._DeviceValues_Filtered[keyword] = statistics.mean(
+        self._DeviceValues_Filtered[deviceattachdetailid] = statistics.mean(
             self._modbus_activity[deviceattachdetailid]['read_data']
             ['raw_data'])
 
     @threaded
     def DataReader(self):
-
+        print("START DATA READER")
         while True:
 
             for act_id in self._modbus_activity:
                 datas = self._modbus_activity[act_id]
+                devicename = datas['devicename']
                 read_ok, data = self.ReadJob(deviceattachdetailid=act_id, read_type=datas["comm_type"])
 
                 if read_ok:
                     # self.DataFilter(deviceattachdetailid=act_id,
                     #                 value=data)
-                    print(f"from :: {data} : to : {int(data, 16)}")
+                    print(f"from :: {devicename} : is : {data}")
 
                 # sleep(0.25)
-                print("=================================================")
-                print(str(datas["devicename"]))
-                sleep(5)
+                # print("=================================================")
+                # print(str(datas["devicename"]))
+                
+                interval_read = float(self._config.get("MOBUS_GENERAL","interval_read"))
+                sleep(interval_read)
 
+    @threaded
+    def DataRecorder(self):
+        print("START DATA RECORDER")
+        while True:
+
+            #save to DB
+            list_act = self._modbus_activity.keys()
+            time_record = str(datetime.datetime.now())
+            for item in list_act:
+                item_data = self._modbus_activity[item]
+                devicename = item_data["devicename"]
+                values = self._DeviceValues_Filtered[item]
+                print(f"{devicename} :: {values}")
+                # if values != None:
+                #     self._DirectDB.InsertDataSample(devicename,time_record,values)
+
+            interval_read = float(self._config.get("MOBUS_GENERAL","interval_record"))
+            sleep(interval_read)
 
 
 if __name__ == "__main__":

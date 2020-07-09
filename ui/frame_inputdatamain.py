@@ -10,10 +10,10 @@
 import wx
 import wx.xrc
 import wx.dataview
-from db_simulator import DB_Sim as dbs
+from ui.db_simulator import DB_Sim as dbs
 
 
-from frame_registerinput import frame_register_input
+from ui.frame_registerinput import frame_register_input
 
 ###########################################################################
 ## Class frame_edit2
@@ -28,7 +28,7 @@ class frame_inputdatamains (frame_register_input):
 
 
 
-        self._frame_inputdatamaine = wx.Frame(  parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 756,655 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+        self._frame_inputdatamaine = wx.Frame(  parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 756,655 ), style = wx.CAPTION|wx.TAB_TRAVERSAL )
 
         self._frame_inputdatamaine.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
         self._frame_inputdatamaine.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )

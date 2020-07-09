@@ -10,10 +10,10 @@
 import wx
 import wx.xrc
 import wx.dataview
-from db_simulator import DB_Sim as dbs
+from ui.db_simulator import DB_Sim as dbs
 import sys
 
-from frame_inputdatamain import frame_inputdatamains
+from ui.frame_inputdatamain import frame_inputdatamains
 
 ###########################################################################
 ## Class frame_main
