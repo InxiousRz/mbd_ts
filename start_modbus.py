@@ -99,7 +99,7 @@ class Modbus_Mod():
 
         return (wrapper)
 
-    def CreateInstrument(self, slave_id, port, baudrate=9600):
+    def CreateInstrument(self, slave_id, port, baudrate=38400):
         try:
             instrument = minimalmodbus.Instrument(
                 port=str(port),
@@ -154,7 +154,7 @@ class Modbus_Mod():
         # task_order = list(task_list.keys())
         # task_order.sort()
 
-        # read_result = []
+        read_result = []
         # # READ ONE BY ONE [A / B IS THE SAME]
         # for task_id in task_order:
         #     task_data = task_list[task_id]
@@ -175,10 +175,14 @@ class Modbus_Mod():
             #Instrument
             instrument = self._modbus_activity[deviceattachdetailid][
                 'instrument']
-            
+            decimal_point = self._modbus_activity[deviceattachdetailid]['decimal_point']
+
             #Read One
-            task_data = list(self._modbus_activity[deviceattachdetailid][
+            keys_one = list(self._modbus_activity[deviceattachdetailid][
             'register_data'].keys())[0]
+            task_data = self._modbus_activity[deviceattachdetailid][
+            'register_data'][keys_one]
+            # print(task_data)
             register = task_data['register_address']
             read_ok, data = self.ReadRegister(registeraddress=register,
                                               instrument=instrument)
@@ -192,6 +196,7 @@ class Modbus_Mod():
             #Instrument
             instrument = self._modbus_activity[deviceattachdetailid][
                 'instrument']
+            decimal_point = self._modbus_activity[deviceattachdetailid]['decimal_point']
 
             #Well this only for convinient
             register_order = [ int(x) for x in list(self._modbus_activity[deviceattachdetailid][
@@ -217,7 +222,7 @@ class Modbus_Mod():
 
             if read_ok:
                 #Pickup only the used data and by seq order
-                read_result = []
+                # read_result = []
                 for seq in register_order:
                     register_data = self._modbus_activity[deviceattachdetailid]['register_data'][str(seq)]
                     register_addr = register_data['register_address']
@@ -229,14 +234,17 @@ class Modbus_Mod():
 
         #Reform Data
         formated_data = self.ReformData(read_data=read_result,
-                                        read_type=read_type)
+                                        read_type=read_type,
+                                        decimal_point=decimal_point)
         return (True, formated_data)
 
-    def ReformData(self, read_data, read_type):
+    def ReformData(self, read_data, read_type, decimal_point):
 
         if str(read_type).upper() == "A":
             result = read_data[0]
-            result = struct.unpack('!f', bytes.fromhex(str(result)))[0]
+            if decimal_point != 0:
+                result = float(result) / (10 ** int(decimal_point))
+            # result = struct.unpack('!f', bytes.fromhex(str(result)))[0]
 
         elif str(read_type).upper() == "B":
             result = ''
@@ -260,6 +268,8 @@ class Modbus_Mod():
                 result += read_data[(lenght_data-1)-i]
 
             result = struct.unpack('!f', bytes.fromhex(str(result)))[0]
+            if decimal_point != 0:
+                result = float(result) / (10 ** int(decimal_point))
 
         return (result)
 
