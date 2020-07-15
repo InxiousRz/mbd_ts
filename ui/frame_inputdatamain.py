@@ -77,7 +77,7 @@ class frame_inputdatamains (frame_register_input):
         fgSizer25.Add( self.m_panel16, 1, wx.EXPAND |wx.ALL, 5 )
 
         self.m_panel15 = wx.Panel( self.m_panel5, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-        fgSizer6 = wx.FlexGridSizer( 4, 2, 0, 0 )
+        fgSizer6 = wx.FlexGridSizer( 5, 2, 0, 0 )
         fgSizer6.SetFlexibleDirection( wx.BOTH )
         fgSizer6.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 
@@ -143,6 +143,17 @@ class frame_inputdatamains (frame_register_input):
 
         fgSizer6.Add( fgSizer8, 1, wx.EXPAND, 5 )
 
+        self.m_staticText241 = wx.StaticText( self.m_panel15, wx.ID_ANY, u"Read Interval", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText241.Wrap( -1 )
+
+        self.m_staticText241.SetFont( wx.Font( 10, wx.FONTFAMILY_SWISS, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL, False, "Arial" ) )
+
+        fgSizer6.Add( self.m_staticText241, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+        self.txt_readinterval = wx.TextCtrl( self.m_panel15, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+        fgSizer6.Add( self.txt_readinterval, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+
 
         self.m_panel15.SetSizer( fgSizer6 )
         self.m_panel15.Layout()
@@ -197,7 +208,7 @@ class frame_inputdatamains (frame_register_input):
         self.m_panel6.SetSizer( fgSizer9 )
         self.m_panel6.Layout()
         fgSizer9.Fit( self.m_panel6 )
-        fgSizer5.Add( self.m_panel6, 1, wx.EXPAND|wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
+        fgSizer5.Add( self.m_panel6, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL, 5 )
 
         gSizer7 = wx.GridSizer( 0, 2, 0, 0 )
 
@@ -249,6 +260,7 @@ class frame_inputdatamains (frame_register_input):
         self.txt_com_port.SetValue("")
         self.txt_decimal_point.SetValue(0)
         self.txt_modbus_type.SetSelection(0)
+        self.txt_readinterval.SetValue("")
 
         self._associated_registers = {}
         self.RefreshDvInputDataMainRegister()
@@ -352,8 +364,10 @@ class frame_inputdatamains (frame_register_input):
             "port":self.txt_com_port.GetValue(),
             "comm_type":self.txt_modbus_type.GetString(self.txt_modbus_type.GetSelection()),
             "decimal_point":self.txt_decimal_point.GetValue(),
+            "read_interval":self.txt_readinterval.GetValue(),
             # "active":True,
             "register_data":self._associated_registers,
+            
         }
         
         if self._main_input_type == "A":

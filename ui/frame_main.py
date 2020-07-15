@@ -78,7 +78,7 @@ class frame_main( frame_inputdatamains ):
         self.m_panel1.SetSizer( fgSizer2 )
         self.m_panel1.Layout()
         fgSizer2.Fit( self.m_panel1 )
-        fgSizer1.Add( self.m_panel1, 1, wx.EXPAND|wx.ALL|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
+        fgSizer1.Add( self.m_panel1, 1, wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
         self._frame_main.SetSizer( fgSizer1 )
@@ -190,6 +190,7 @@ class frame_main( frame_inputdatamains ):
             self.txt_selected_slave_id.SetValue(datas["slave_id"])
             self.txt_com_port.SetValue(datas["port"])
             self.txt_decimal_point.SetValue(int(datas["decimal_point"]))
+            self.txt_readinterval.SetValue(str(datas["read_interval"]))
             if datas["comm_type"] == "B":
                 self.txt_modbus_type.SetSelection(1)
             else:

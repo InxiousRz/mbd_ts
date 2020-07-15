@@ -1,6 +1,5 @@
 import psycopg2
 
-
 class TempQuerySQL():
     def __init__(self):
         self._DB_CONN = self.CreateConnection()
@@ -15,7 +14,7 @@ class TempQuerySQL():
             password="PharmaLogic",
             host="agrotech.cbyoam1fda2f.ap-southeast-1.rds.amazonaws.com",
             port="5432")
-        print(conn)
+        # print(conn)
         return (conn)
 
     ## ACTUAL QUERIES
@@ -32,6 +31,31 @@ class TempQuerySQL():
             'devicename': devicename,
             'recordtime': recordtime,
             'values': values,
+        }
+
+        #Execute
+        try:
+            cur = self._DB_CONN.cursor()
+            cur.execute(sql, params)
+        except Exception as e:
+            self._DB_CONN.rollback()
+        else:
+            self._DB_CONN.commit()
+
+        cur.close()
+
+    def InsertError(self, error_type, devicename, recordtime, detailed_error):
+        sql = """
+                --INSERT ERROR
+                INSERT INTO trial_error_rooftop(error_type, devicename, recordtime, detailed_error)
+                VALUES(%(error_type)s, %(devicename)s, %(recordtime)s, %(detailed_error)s)
+        """
+
+        params = {
+            'devicename': devicename,
+            'recordtime': recordtime,
+            'values': values,
+            'detailed_error': detailed_error,
         }
 
         #Execute

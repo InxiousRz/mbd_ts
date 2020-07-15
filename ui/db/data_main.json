@@ -1,1 +1,82 @@
-{"1": {"devicename": "TDS Sensor", "slave_id": "200", "port": "COM5", "comm_type": "B", "decimal_point": 0, "register_data": {"10": {"sequence": "10", "register_address": 102, "register_alias": "tds_part_01"}, "20": {"sequence": "20", "register_address": 103, "register_alias": "tds_part_02"}}}, "2": {"devicename": "Ultrasonic 01", "slave_id": "200", "port": "COM5", "comm_type": "A", "decimal_point": 2, "register_data": {"10": {"sequence": "10", "register_address": 100, "register_alias": "ultrasonic_01_full"}}}, "3": {"devicename": "Ultrasonic 02", "slave_id": "200", "port": "COM5", "comm_type": "A", "decimal_point": 2, "register_data": {"10": {"sequence": "10", "register_address": 101, "register_alias": "ultrasonic_02_full"}}}}
+{
+    "1": {
+        "devicename": "TDS Sensor",
+        "slave_id": "200",
+        "port": "COM8",
+        "comm_type": "B",
+        "decimal_point": 0,
+        "read_interval": 3,
+        "register_data": {
+            "10": {
+                "sequence": "10",
+                "register_address": 3,
+                "register_alias": "tds_part_01"
+            },
+            "20": {
+                "sequence": "20",
+                "register_address": 4,
+                "register_alias": "tds_part_02"
+            }
+        }
+    },
+    "2": {
+        "devicename": "Ultrasonic 01",
+        "slave_id": "200",
+        "port": "COM8",
+        "comm_type": "A",
+        "decimal_point": 2,
+        "read_interval": 3,
+        "register_data": {
+            "10": {
+                "sequence": "10",
+                "register_address": 1,
+                "register_alias": "ultrasonic_01_full"
+            }
+        }
+    },
+    "3": {
+        "devicename": "Ultrasonic 02",
+        "slave_id": "200",
+        "port": "COM8",
+        "comm_type": "A",
+        "decimal_point": 2,
+        "read_interval": 3,
+        "register_data": {
+            "10": {
+                "sequence": "10",
+                "register_address": 2,
+                "register_alias": "ultrasonic_02_full"
+            }
+        }
+    },
+    "4": {
+        "devicename": "Temp 01",
+        "slave_id": "199",
+        "port": "COM8",
+        "comm_type": "A",
+        "decimal_point": 0,
+        "read_interval": 3,
+        "register_data": {
+            "10": {
+                "sequence": "10",
+                "register_address": 0,
+                "register_alias": "Temp 01 Values"
+            }
+        }
+    },
+    "5": {
+        "devicename": "Temp 02",
+        "slave_id": "199",
+        "port": "COM8",
+        "comm_type": "A",
+        "decimal_point": 0,
+        "read_interval": 3,
+        "register_data": {
+            "10": {
+                "sequence": "10",
+                "register_address": 1,
+                "register_alias": "Temp 02 Values"
+            }
+        }
+    }
+}

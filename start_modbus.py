@@ -2,19 +2,22 @@ import minimalmodbus
 import json
 import threading
 import serial
+import statistics
 from time import sleep
 import datetime
 import configparser
 import struct
+import wx
 
 from temp_sql_module import TempQuerySQL
+from onrun_ui import OnRunUis
 
 
-class Modbus_Mod():
+class Modbus_Mod(OnRunUis):
     def __init__(self):
-        super().__init__()
 
         self._modbus_activity = {}
+        self._mdobus_read_schedule = {}
         self._DeviceValues_Filtered = {}
 
         self._DirectDB = TempQuerySQL()
@@ -47,13 +50,16 @@ class Modbus_Mod():
         with open("ui\db\data_main.json", "r") as jsonfile:
             self._modbus_devices = json.load(jsonfile)
 
-        print(self._modbus_devices) 
-
         try:
+            ##WX
+            #=================================
+            wx_devicelist = []
+            #=================================
+
+            existed_instrument = {}
             for deviceattachdetailid in self._modbus_devices:
 
                 ##CREATE an Activity for every deviceattachdetailid
-
                 device_activity_data = {}
                 device_activity_data = self._modbus_devices[
                     deviceattachdetailid]
@@ -61,6 +67,18 @@ class Modbus_Mod():
                 #Create Instrument
                 serial_port = device_activity_data['port']
                 slave_id = device_activity_data['slave_id']
+
+                if self._mdobus_read_schedule.get(serial_port) == None:
+                    self._mdobus_read_schedule.update({serial_port:{}})
+                
+                if self._mdobus_read_schedule[serial_port].get(slave_id) == None:
+                    self._mdobus_read_schedule[serial_port].update({slave_id:{}})
+
+                for reg_keys in device_activity_data['register_data']:
+                    reg_data = device_activity_data['register_data'][reg_keys]
+                    self._mdobus_read_schedule[serial_port][slave_id].update({slave_id:{}})
+                    
+
                 client_ok, result = self.CreateInstrument(slave_id=slave_id,port=serial_port)
                 if client_ok:
 
@@ -80,14 +98,32 @@ class Modbus_Mod():
                     #Add filtered
                     self._DeviceValues_Filtered[deviceattachdetailid] = None
 
+                    ##WX
+                    #=================================
+                    wx_devicelist.append(device_activity_data["devicename"])
+                    #=================================
+
                 else:
                     raise Exception("Failed to Create Instrument")
 
         except Exception as e:
             print(e)
         else:
-            self.DataReader()
+            ## WX PYTHON
+            #===========================================
+            OnRunUis.__init__(self)
+            self.SetDvItem(wx_devicelist)
+            #===========================================
+            
+
+            self.DataReader()                
             # self.DataRecorder()
+            
+
+            ## WX PYTHON
+            #===========================================
+            self.OpenForms()
+            #===========================================
 
     def threaded(fn):
         def wrapper(*args, **kwargs):
@@ -290,31 +326,52 @@ class Modbus_Mod():
                 'raw_data'].append(value)
 
         #Set Filtered
-        self._DeviceValues_Filtered[deviceattachdetailid] = statistics.mean(
-            self._modbus_activity[deviceattachdetailid]['read_data']
-            ['raw_data'])
+        dev_name = self._modbus_activity[deviceattachdetailid]["devicename"]
+        avg_val = statistics.mean(self._modbus_activity[deviceattachdetailid]['read_data']['raw_data'])
+        self.UpdateDvItem(dev_name, str(avg_val))
 
-    @threaded
+        # self._DeviceValues_Filtered[deviceattachdetailid] = statistics.mean(
+        #     self._modbus_activity[deviceattachdetailid]['read_data']
+        #     ['raw_data'])
+
+    
     def DataReader(self):
-        print("START DATA READER")
-        while True:
+        for act_id in self._modbus_activity:
+            act_data = self._modbus_activity[act_id]
+            devicename = act_data['devicename']
+            self.ReadThread(devicename=devicename, act_id=act_id, act_data=act_data)
 
-            for act_id in self._modbus_activity:
-                datas = self._modbus_activity[act_id]
-                devicename = datas['devicename']
-                read_ok, data = self.ReadJob(deviceattachdetailid=act_id, read_type=datas["comm_type"])
+
+    @threaded            
+    def ReadThread(self, devicename, act_id, act_data):
+        print(f"START DATA READER FOR {devicename}")
+        while True:
+            try:
+                read_ok, data = self.ReadJob(deviceattachdetailid=act_id, read_type=act_data["comm_type"])                
 
                 if read_ok:
-                    # self.DataFilter(deviceattachdetailid=act_id,
-                    #                 value=data)
-                    print(f"from :: {devicename} : is : {data}")
+                    self.DataFilter(deviceattachdetailid=act_id,
+                                    value=data)
+                                    
+                    ##WX
+                    #==========================
+                    self.AddItemToLb(f"{devicename} :: {data}")
+                    #==========================
+                else:
+                    ##WX
+                    #==========================
+                    self.AddItemToLb(f"{devicename} :: ERROR")
+                    #==========================
 
-                # sleep(0.25)
-                # print("=================================================")
-                # print(str(datas["devicename"]))
-                
-                interval_read = float(self._config.get("MOBUS_GENERAL","interval_read"))
-                sleep(interval_read)
+                    
+
+                print(f"from :: {devicename} : is : {data}")
+            except Exception as e:
+                print(e)
+
+            interval_read = float(act_data["read_interval"])
+            print(interval_read)
+            sleep(interval_read)
 
     @threaded
     def DataRecorder(self):
@@ -337,6 +394,6 @@ class Modbus_Mod():
 
 
 if __name__ == "__main__":
+    APPS = wx.App(False)
     a = Modbus_Mod()
-    while True:
-        pass
+    APPS.MainLoop()
