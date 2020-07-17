@@ -7,6 +7,7 @@ from time import sleep
 import datetime
 import configparser
 import struct
+import sys
 import wx
 
 from temp_sql_module import TempQuerySQL
@@ -17,7 +18,7 @@ class Modbus_Mod(OnRunUis):
     def __init__(self):
 
         self._modbus_activity = {}
-        self._mdobus_read_schedule = {}
+        self._modbus_read_schedule = {}
         self._DeviceValues_Filtered = {}
 
         self._DirectDB = TempQuerySQL()
@@ -68,22 +69,40 @@ class Modbus_Mod(OnRunUis):
                 serial_port = device_activity_data['port']
                 slave_id = device_activity_data['slave_id']
 
-                if self._mdobus_read_schedule.get(serial_port) == None:
-                    self._mdobus_read_schedule.update({serial_port:{}})
-                
-                if self._mdobus_read_schedule[serial_port].get(slave_id) == None:
-                    self._mdobus_read_schedule[serial_port].update({slave_id:{}})
 
-                for reg_keys in device_activity_data['register_data']:
-                    reg_data = device_activity_data['register_data'][reg_keys]
-                    self._mdobus_read_schedule[serial_port][slave_id].update({slave_id:{}})
+                ## Data Scheduler
+                ##=========================================================
+                if self._modbus_read_schedule.get(serial_port) == None:
+                    self._modbus_read_schedule.update({serial_port:{}})
+                
+                if self._modbus_read_schedule[serial_port].get(slave_id) == None:
+                    self._modbus_read_schedule[serial_port].update({slave_id:{}})
+                
+                if self._modbus_read_schedule[serial_port][slave_id].get("register_list") == None:
+                    self._modbus_read_schedule[serial_port][slave_id].update({"register_list":[]})
+                    self._modbus_read_schedule[serial_port][slave_id].update({"register_owner":{}})
+
+                #ADD OWNER
+                self._modbus_read_schedule[serial_port][slave_id]["register_owner"].update(
+                    {deviceattachdetailid:device_activity_data['register_data']}
+                )
+
+                #ADD REGISTER TO LIST
+                for sequence in device_activity_data['register_data']:
+                    reg_data = device_activity_data['register_data'][sequence]
+                    self._modbus_read_schedule[serial_port][slave_id]["register_list"].append(
+                        reg_data["register_address"])
                     
 
                 client_ok, result = self.CreateInstrument(slave_id=slave_id,port=serial_port)
+                # client_ok = True
+                # result = {}
+
                 if client_ok:
 
                     #Add Insrument to Data
                     device_activity_data['instrument'] = result
+                    self._modbus_read_schedule[serial_port][slave_id]["instrument"] = result
 
                     #Create Data Read Container
                     device_activity_data['read_data'] = {
@@ -109,6 +128,10 @@ class Modbus_Mod(OnRunUis):
         except Exception as e:
             print(e)
         else:
+            
+            # print(json.dumps(self._modbus_read_schedule, indent=4))
+            # sys.exit(0)
+
             ## WX PYTHON
             #===========================================
             OnRunUis.__init__(self)
@@ -173,205 +196,182 @@ class Modbus_Mod(OnRunUis):
         try:
             data = instrument.read_registers(registeraddress=int(start),
             number_of_registers=int(end)-int(start)+1, functioncode=3)
+            #note max number registers is 125 , bug for the future
         except Exception as e:
             print(f'Read Registers {start} -> {end} :: {int(end)-int(start)} ERROR :: {e}')
             return (False, e)
         else:
             # Convert to Hex
             print(f'Read Registers {start} -> {end} :: {int(end)-int(start)} OK ')
-            data = [hex(x)[2:] for x in data]
             return (True, data)
 
-    def ReadJob(self, deviceattachdetailid, read_type):
 
-        # task_list = self._modbus_activity[deviceattachdetailid][
-        #     'register_data']
-        # read_type = self._modbus_activity[deviceattachdetailid]['comm_type']
-        # task_order = list(task_list.keys())
-        # task_order.sort()
+    def ReadJob(self, serial_port, slave_id):
 
-        read_result = []
-        # # READ ONE BY ONE [A / B IS THE SAME]
-        # for task_id in task_order:
-        #     task_data = task_list[task_id]
+        job_data = self._modbus_read_schedule[serial_port][slave_id]
 
-        #     register = task_data['register_address']
-        #     instrument = self._modbus_activity[deviceattachdetailid][
-        #         'instrument']
-        #     read_ok, data = self.ReadRegister(registeraddress=register,
-        #                                       instrument=instrument)
+        instrument = job_data["instrument"]
+        ownerlist = job_data["register_owner"]
 
-        #     if read_ok:
-        #         read_result.append(data)
-        #     else:
-        #         return (False, None)
-
-        ## READ UNDER RULE OF A AND B
-        if read_type == "A":
-            #Instrument
-            instrument = self._modbus_activity[deviceattachdetailid][
-                'instrument']
-            decimal_point = self._modbus_activity[deviceattachdetailid]['decimal_point']
-
-            #Read One
-            keys_one = list(self._modbus_activity[deviceattachdetailid][
-            'register_data'].keys())[0]
-            task_data = self._modbus_activity[deviceattachdetailid][
-            'register_data'][keys_one]
-            # print(task_data)
-            register = task_data['register_address']
-            read_ok, data = self.ReadRegister(registeraddress=register,
-                                              instrument=instrument)
-
-            if read_ok:
-                read_result.append(data)
-            else:
-                return (False, None)
-
-        elif read_type == "B":
-            #Instrument
-            instrument = self._modbus_activity[deviceattachdetailid][
-                'instrument']
-            decimal_point = self._modbus_activity[deviceattachdetailid]['decimal_point']
-
-            #Well this only for convinient
-            register_order = [ int(x) for x in list(self._modbus_activity[deviceattachdetailid][
-            'register_data'].keys()) ]
-            register_order.sort()
-
-            #Get all Register address
-            register_address_list = []
-            for seq in register_order:
-                register_data = self._modbus_activity[deviceattachdetailid]['register_data'][str(seq)]
-                register_addr = register_data['register_address']
-                register_address_list.append(register_addr)
-
-            
-            #order it up
-            min_reg = min(register_address_list)
-            max_reg = max(register_address_list)
-
-            read_ok, data = self.ReadRegisters(start=min_reg,
-                                                end=max_reg,
-                                              instrument=instrument)
-            print(data)
-
-            if read_ok:
-                #Pickup only the used data and by seq order
-                # read_result = []
-                for seq in register_order:
-                    register_data = self._modbus_activity[deviceattachdetailid]['register_data'][str(seq)]
-                    register_addr = register_data['register_address']
-                    data_for_you = data[int(register_addr)-int(min_reg)]
-                    read_result.append(str(data_for_you))
+        #Well this for convenienve
+        register_address_list = [ int(x) for x in job_data["register_list"] ]
+        register_address_list.sort()
         
-            else:
-                return (False, None)
+        #order it up, and do some math
+        min_reg = min(register_address_list)
+        max_reg = max(register_address_list)
+        reg_range = max_reg-min_reg + 1
 
-        #Reform Data
-        formated_data = self.ReformData(read_data=read_result,
-                                        read_type=read_type,
-                                        decimal_point=decimal_point)
-        return (True, formated_data)
+        read_ok, data = self.ReadRegisters(start=min_reg,
+                                            end=max_reg,
+                                            instrument=instrument)
+        # print(data)
 
-    def ReformData(self, read_data, read_type, decimal_point):
+        if read_ok:
+            #Pickup only the used data and by owner
+            read_result = {}
+            for deviceattachdetailid in ownerlist.keys():
+                owner_data = ownerlist[deviceattachdetailid]
+                read_result.update({deviceattachdetailid:[]})
 
-        if str(read_type).upper() == "A":
-            result = read_data[0]
-            if decimal_point != 0:
-                result = float(result) / (10 ** int(decimal_point))
-            # result = struct.unpack('!f', bytes.fromhex(str(result)))[0]
+                #Get Data for this owner
+                for seq in owner_data:
+                    register_data = owner_data[seq]
+                    register_addr = register_data['register_address']
 
-        elif str(read_type).upper() == "B":
-            result = ''
+                    #Get Specified data per sequence
+                    data_for_you = data[int(register_addr)-int(min_reg)]
+                    read_result[deviceattachdetailid].append(data_for_you)
 
-            #Original
-            # result_container = []
-            
-            # for i in range(len(read_data)):
-            #     # result += read_data[i]
-            #     word = read_data[i]
-            #     for i in range(0, len(word), 2):
-            #         result_container.append(word[i:i+2])
 
-            # #Reverse
-            # for item in result_container[::-1]:
-            #     result += item
+            # print(read_result)
 
-            #New 
-            lenght_data = len(read_data)
-            for i in range(lenght_data):
-                result += read_data[(lenght_data-1)-i]
+            #Reform Data
+            formated_data = self.ReformData(read_data=read_result)
 
-            result = struct.unpack('!f', bytes.fromhex(str(result)))[0]
-            if decimal_point != 0:
-                result = float(result) / (10 ** int(decimal_point))
+            #Data Filter
+            self.DataFilter(read_data=formated_data)
 
-        return (result)
-
-    def DataFilter(self, deviceattachdetailid, value):
-        #Collect data and filter
-        if len(self._modbus_activity[deviceattachdetailid]['read_data']
-               ['raw_data']) >= self._modbus_activity[deviceattachdetailid][
-                   'read_data']['raw_lenght']:
-            del self._modbus_activity[deviceattachdetailid]['read_data'][
-                'raw_data'][:len(self._modbus_activity[deviceattachdetailid]
-                                 ['read_data']['raw_data']) - 20]
-
-            self._modbus_activity[deviceattachdetailid]['read_data'][
-                'raw_data'].append(value)
-
-        else:
-            self._modbus_activity[deviceattachdetailid]['read_data'][
-                'raw_data'].append(value)
-
-        #Set Filtered
-        dev_name = self._modbus_activity[deviceattachdetailid]["devicename"]
-        avg_val = statistics.mean(self._modbus_activity[deviceattachdetailid]['read_data']['raw_data'])
-        self.UpdateDvItem(dev_name, str(avg_val))
-
-        # self._DeviceValues_Filtered[deviceattachdetailid] = statistics.mean(
-        #     self._modbus_activity[deviceattachdetailid]['read_data']
-        #     ['raw_data'])
-
+            return (True, formated_data)
     
+        else:
+            return (False, None)
+
+        
+        
+
+    def ReformData(self, read_data):
+
+        result_container = {}
+        for deviceattachdetailid in read_data.keys():
+            read_content = read_data[deviceattachdetailid]
+            read_type = self._modbus_activity[deviceattachdetailid]["comm_type"]
+            decimal_point = self._modbus_activity[deviceattachdetailid]['decimal_point']
+
+            # A to B Filter
+            if str(read_type).upper() == "A":
+                # print(f"========== {read_content}")
+                result = float(read_content[0])
+                if decimal_point != 0:
+                    result = result / (10 ** int(decimal_point))
+                
+                #Append Result
+                result_container.update({deviceattachdetailid:result})
+
+            elif str(read_type).upper() == "B":
+
+                #convert Hex
+                read_content = [hex(x)[2:] for x in read_content]
+                
+                result = ''
+
+                #New 
+                lenght_data = len(read_content)
+                for i in range(lenght_data):
+                    result += read_content[(lenght_data-1)-i]
+
+                result = float(struct.unpack('!f', bytes.fromhex(str(result)))[0])
+                if decimal_point != 0:
+                    result = float(result) / (10 ** int(decimal_point))
+                
+                #Append Result
+                result_container.update({deviceattachdetailid:result})
+
+        return (result_container)
+
+    def DataFilter(self, read_data):
+
+        for deviceattachdetailid in read_data.keys():
+            value = read_data[deviceattachdetailid]
+            decimal_point = self._modbus_activity[deviceattachdetailid]['decimal_point']
+            
+            
+            #Collect data and filter
+            if len(self._modbus_activity[deviceattachdetailid]['read_data']
+                ['raw_data']) >= self._modbus_activity[deviceattachdetailid][
+                    'read_data']['raw_lenght']:
+                del self._modbus_activity[deviceattachdetailid]['read_data'][
+                    'raw_data'][:len(self._modbus_activity[deviceattachdetailid]
+                                    ['read_data']['raw_data']) - 20]
+
+                self._modbus_activity[deviceattachdetailid]['read_data'][
+                    'raw_data'].append(value)
+
+            else:
+                self._modbus_activity[deviceattachdetailid]['read_data'][
+                    'raw_data'].append(value)
+
+            #Set Filtered
+            dev_name = self._modbus_activity[deviceattachdetailid]["devicename"]
+            avg_val = statistics.mean(self._modbus_activity[deviceattachdetailid]['read_data']['raw_data'])
+            avg_val = round(avg_val,int(decimal_point))
+            self.UpdateDvItem(dev_name, str(avg_val))
+
+            # self._DeviceValues_Filtered[deviceattachdetailid] = statistics.mean(
+            #     self._modbus_activity[deviceattachdetailid]['read_data']
+            #     ['raw_data'])
+
+    @threaded
     def DataReader(self):
-        for act_id in self._modbus_activity:
-            act_data = self._modbus_activity[act_id]
-            devicename = act_data['devicename']
-            self.ReadThread(devicename=devicename, act_id=act_id, act_data=act_data)
 
-
-    @threaded            
-    def ReadThread(self, devicename, act_id, act_data):
-        print(f"START DATA READER FOR {devicename}")
         while True:
-            try:
-                read_ok, data = self.ReadJob(deviceattachdetailid=act_id, read_type=act_data["comm_type"])                
+            for serial_port in self._modbus_read_schedule:
+                port_data = self._modbus_read_schedule[serial_port]
+                slave_list = list(port_data.keys())
+                for slave_id in slave_list:
+                    self.ReadThread(serial_port=serial_port, slave_id=slave_id)
+                    sleep(1)
 
-                if read_ok:
-                    self.DataFilter(deviceattachdetailid=act_id,
-                                    value=data)
-                                    
-                    ##WX
-                    #==========================
-                    self.AddItemToLb(f"{devicename} :: {data}")
-                    #==========================
-                else:
-                    ##WX
-                    #==========================
-                    self.AddItemToLb(f"{devicename} :: ERROR")
-                    #==========================
 
-                    
+    # @threaded            
+    def ReadThread(self, serial_port, slave_id):
+        print(f"START DATA READER FOR COM-PORT {serial_port} SLAVE-ID {slave_id} ")
+        # while True:
+            # try:
+        read_ok, read_data = self.ReadJob(serial_port=serial_port, slave_id=slave_id)        
 
+        if read_ok:
+            for deviceattachdetailid in read_data.keys():
+                devicename = self._modbus_activity[deviceattachdetailid]["devicename"]
+                data = read_data[deviceattachdetailid]
+                ##WX
+                #==========================
+                self.AddItemToLb(f"{devicename} :: {data}")
+                #==========================
                 print(f"from :: {devicename} : is : {data}")
-            except Exception as e:
-                print(e)
+        else:
+            ##WX
+            #==========================
+            self.AddItemToLb(f"COM-SLAVE {serial_port} - {slave_id} ::ERROR")
+            #==========================
 
-            interval_read = float(act_data["read_interval"])
-            print(interval_read)
-            sleep(interval_read)
+        # except Exception as e:
+        #     print(e)
+
+        
+        # interval_read = float(self._config.get("MOBUS_GENERAL","interval_read"))
+        # sleep(interval_read)
+
 
     @threaded
     def DataRecorder(self):

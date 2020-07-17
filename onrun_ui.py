@@ -10,6 +10,7 @@
 import wx
 import wx.xrc
 import wx.dataview
+import sys
 
 ###########################################################################
 ## Class MyFrame1
@@ -128,11 +129,16 @@ class OnRunUis ( wx.Frame ):
 
         self._Onrun_UI.Centre( wx.BOTH )
 
+        # Connect Events
+        self._Onrun_UI.Bind( wx.EVT_CLOSE, self.Destroye )
+
         
 
     def __del__( self ):
         pass
-
+    
+    def Destroye(self, event):
+        sys.exit(0)
     
     def OpenForms(self):
         self._Onrun_UI.Show()
