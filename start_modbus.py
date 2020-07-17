@@ -288,8 +288,10 @@ class Modbus_Mod(OnRunUis):
                     result += read_content[(lenght_data-1)-i]
 
                 result = float(struct.unpack('!f', bytes.fromhex(str(result)))[0])
-                if decimal_point != 0:
-                    result = float(result) / (10 ** int(decimal_point))
+
+                #No Decimal Point for B
+                # if decimal_point != 0:
+                #     result = float(result) / (10 ** int(decimal_point))
                 
                 #Append Result
                 result_container.update({deviceattachdetailid:result})
