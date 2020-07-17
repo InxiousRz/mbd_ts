@@ -35,7 +35,7 @@ class OnRunUis ( wx.Frame ):
         self.m_staticText1.SetForegroundColour( wx.Colour( 0, 64, 128 ) )
         self.m_staticText1.SetBackgroundColour( wx.Colour( 244, 244, 244 ) )
 
-        fgSizer1.Add( self.m_staticText1, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER_HORIZONTAL|wx.EXPAND, 5 )
+        fgSizer1.Add( self.m_staticText1, 0, wx.EXPAND, 5 )
 
         self.m_panel1 = wx.Panel( self._Onrun_UI, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
         fgSizer2 = wx.FlexGridSizer( 2, 1, 0, 0 )
@@ -62,7 +62,7 @@ class OnRunUis ( wx.Frame ):
 
         self.dv_data = wx.dataview.DataViewListCtrl( self.m_panel6, wx.ID_ANY, wx.DefaultPosition, wx.Size( 400,300 ), 0 )
         self.dv_col_nama = self.dv_data.AppendTextColumn( u"Name", wx.dataview.DATAVIEW_CELL_INERT, 240, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
-        self.dv_col_value = self.dv_data.AppendTextColumn( u"Value", wx.dataview.DATAVIEW_CELL_INERT, 150, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
+        self.dv_col_value = self.dv_data.AppendTextColumn( u"Average Value", wx.dataview.DATAVIEW_CELL_INERT, 150, wx.ALIGN_LEFT, wx.dataview.DATAVIEW_COL_RESIZABLE )
         fgSizer8.Add( self.dv_data, 0, wx.ALL, 5 )
         
 

@@ -128,9 +128,6 @@ class Modbus_Mod(OnRunUis):
         except Exception as e:
             print(e)
         else:
-            
-            # print(json.dumps(self._modbus_read_schedule, indent=4))
-            # sys.exit(0)
 
             ## WX PYTHON
             #===========================================
@@ -140,7 +137,7 @@ class Modbus_Mod(OnRunUis):
             
 
             self.DataReader()                
-            # self.DataRecorder()
+            self.DataRecorder()
             
 
             ## WX PYTHON
@@ -326,25 +323,29 @@ class Modbus_Mod(OnRunUis):
             avg_val = statistics.mean(self._modbus_activity[deviceattachdetailid]['read_data']['raw_data'])
             avg_val = round(avg_val,int(decimal_point))
             self.UpdateDvItem(dev_name, str(avg_val))
+            self._DeviceValues_Filtered[deviceattachdetailid] = avg_val
 
-            # self._DeviceValues_Filtered[deviceattachdetailid] = statistics.mean(
-            #     self._modbus_activity[deviceattachdetailid]['read_data']
-            #     ['raw_data'])
+    # @threaded
+    def DataReader(self):
+        for serial_port in self._modbus_read_schedule:
+            port_data = self._modbus_read_schedule[serial_port]
+            slave_list = list(port_data.keys())
+
+            #Port Read Thread
+            self.PortReadThread(serial_port=serial_port, slave_list=slave_list)
+
 
     @threaded
-    def DataReader(self):
-
+    def PortReadThread(self, serial_port, slave_list):
+        print(f"START PORT READ ON {serial_port} and {slave_list}")
         while True:
-            for serial_port in self._modbus_read_schedule:
-                port_data = self._modbus_read_schedule[serial_port]
-                slave_list = list(port_data.keys())
-                for slave_id in slave_list:
-                    self.ReadThread(serial_port=serial_port, slave_id=slave_id)
-                    sleep(1)
-
+            for slave_id in slave_list:
+                self.SlaveRead(serial_port=serial_port, slave_id=slave_id)
+                interval_read = float(self._config.get("MOBUS_GENERAL","interval_read"))
+                sleep(interval_read)
 
     # @threaded            
-    def ReadThread(self, serial_port, slave_id):
+    def SlaveRead(self, serial_port, slave_id):
         print(f"START DATA READER FOR COM-PORT {serial_port} SLAVE-ID {slave_id} ")
         # while True:
             # try:
@@ -368,26 +369,25 @@ class Modbus_Mod(OnRunUis):
         # except Exception as e:
         #     print(e)
 
-        
-        # interval_read = float(self._config.get("MOBUS_GENERAL","interval_read"))
-        # sleep(interval_read)
-
 
     @threaded
     def DataRecorder(self):
         print("START DATA RECORDER")
         while True:
 
-            #save to DB
-            list_act = self._modbus_activity.keys()
-            time_record = str(datetime.datetime.now())
-            for item in list_act:
-                item_data = self._modbus_activity[item]
-                devicename = item_data["devicename"]
-                values = self._DeviceValues_Filtered[item]
-                print(f"{devicename} :: {values}")
-                # if values != None:
-                #     self._DirectDB.InsertDataSample(devicename,time_record,values)
+            #Check if Required To Save Record
+            if bool(int(self._config.get("MOBUS_GENERAL","save_db"))):
+
+                #save to DB
+                list_act = self._modbus_activity.keys()
+                time_record = str(datetime.datetime.now())
+                for item in list_act:
+                    item_data = self._modbus_activity[item]
+                    devicename = item_data["devicename"]
+                    values = self._DeviceValues_Filtered[item]
+                    print(f"RECORD {devicename} :: {values}")
+                    if values != None:
+                        self._DirectDB.InsertDataSample(devicename,time_record,values)
 
             interval_read = float(self._config.get("MOBUS_GENERAL","interval_record"))
             sleep(interval_read)
