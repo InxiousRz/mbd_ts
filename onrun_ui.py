@@ -198,7 +198,7 @@ class OnRunUis ( wx.Frame ):
     def generatedagraph(self, event):
         dates = self.date_picker_01.GetValue() #8/10/2020 12:00:00 AM
         print(dates)
-        dates = datetime.datetime.strptime(str(dates), "%m/%d/%Y %H:%M:%S %p")
+        dates = datetime.datetime.strptime(str(dates), "%m/%d/%Y %H:%M:%S")
         dates = str(dates.strftime("%Y-%m-%d"))
         devices = self.devicelist_graph.GetString(self.devicelist_graph.GetSelection())
         
