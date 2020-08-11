@@ -9,10 +9,13 @@ import configparser
 import struct
 import sys
 import wx
+import locale
 
 from temp_sql_module import TempQuerySQL
 from onrun_ui import OnRunUis
 
+
+locale.setlocale(locale.LC_ALL, 'en_US.utf8')
 
 class Modbus_Mod(OnRunUis):
     def __init__(self):

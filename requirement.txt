@@ -1,7 +1,0 @@
-minimalmodbus==1.0.2
-numpy==1.19.0
-Pillow==7.1.2
-psycopg2==2.8.5
-pyserial==3.4
-six==1.15.0
-wxPython==4.1.0
