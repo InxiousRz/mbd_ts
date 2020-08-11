@@ -196,6 +196,7 @@ class OnRunUis ( wx.Frame ):
         pass
     
     def generatedagraph(self, event):
+        self.cmd_generategraph.Disable()
         dates = self.date_picker_01.GetValue() #8/10/2020 12:00:00 AM
         print(dates)
         dates = datetime.datetime.strptime(str(dates), "%m/%d/%Y %H:%M:%S")
@@ -207,6 +208,7 @@ class OnRunUis ( wx.Frame ):
         GraphGen(dates=dates,
                     lives=False,
                     devices=devices)
+        self.cmd_generategraph.Enable()
 
     def Destroye(self, event):
         sys.exit(0)

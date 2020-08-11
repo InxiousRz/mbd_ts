@@ -83,10 +83,6 @@ class GraphGen():
         self.fig.autofmt_xdate()
         self.ax.grid()
 
-        #ANIMATION
-        # self.ani = animation.FuncAnimation(self.fig, self.GpRun, self.GpDatapassing, blit=False, interval=1000,
-        #                                     repeat=False, init_func=self.GpInit)
-
         figure = plt.gcf()  # Get current figure
         toolbar = figure.canvas.toolbar  # Get the toolbar handler
         toolbar.update()
@@ -101,23 +97,12 @@ class GraphGen():
         plt.show()
 
         plt.clf()
-        plt.hold
         if self._LiveUpdate == True:
             self._LiveUpdate = False
         plt.close()
         time.sleep(1)
         self._GraphActivates = False
         return
-        # except Exception as e:
-        #     print(e)
-        #     print("a")
-        #     plt.clf()
-        #     if self._LiveUpdate == True:
-        #         self._LiveUpdate = False
-        #     plt.close()
-        #     time.sleep(1)
-        #     self._GraphActivates = False
-        #     return
 
     def GpGetdatetime(self):
         res = datetime.datetime.now()
@@ -126,99 +111,4 @@ class GraphGen():
     def GpGetdate(self):
         res = datetime.date.today()
         return (res)
-
-    def GpDatapassing(self):
-        while True:
-            if self._LiveUpdate == True:
-                try:
-                    Data_Container = self._LiveData
-                    
-                    if len(Data_Container) != 0:
-                        Data_Container.sort()
-                        new = True
-                        x = Data_Container[0][0]
-                        y = Data_Container[0][1]
-                        del Data_Container[0]
-                    else:
-                        new = False
-                        x = None
-                        y = None
-                except Exception as e:
-                    print(e)
-                    print("b")
-                    yield (False,None,None)
-                else:
-                    yield (new,x, y)
-            else:
-                new = False
-                x = None
-                y = None
-                yield (new, x, y)
-
-
-    def GpInit(self):
-        self.ax.set_ylim(int(self.y_axis_min), int(self.y_axis_max))
-        self.ax.set_xlim(self.x_axis_start, self.x_axis_end)
-        self.ax.set_xlabel('Time Record')
-        self.ax.set_ylabel('Value ' + str(self.GR_UsedSensor))
-        self.ax.xaxis.set_major_formatter(ds.DateFormatter('%H:%M:%S'))
-        self.fig.suptitle(str('Data On : ') + str(self.date),fontsize=14,fontweight='bold')
-        self.fig.autofmt_xdate()
-        self.ax.grid()
-        self.line.set_data(self.xdata, self.ydata)
-        return (self.line)
-
-
-
-    def GpRun(self,data):
-        # update the data
-        new, x, y = data
-        # print new,x,y
-        if new == True:
-            # print
-            self.xdata.append(x)
-            self.ydata.append(y)
-
-            if self._LiveUpdate == True:
-                date_now = datetime.datetime(year=self.date.year,month=self.date.month,day=self.date.day,
-                                       hour=23,minute=59,second=59)
-                date_diff = (x - date_now).total_seconds()
-                # print (date_diff)
-
-                if date_diff >= 1:
-                    # ToDo : Save To File Here
-                    print ('Passing A New Day')
-                    plt.close()
-
-                    # ToDo : Reset Canvas
-                    del self.xdata[:]
-                    del self.ydata[:]
-                    self.line.set_data(self.xdata, self.ydata)
-
-            print(str(self.xdata[-1])+' // '+str(self.ydata[-1]))
-
-            self.line.set_data(self.xdata, self.ydata)
-
-        return (self.line)
-
-
-# if __name__ == "__main__":
-
-
-    # data sample
-    # dates = datetime.date.today()
-    # container = {}
-    # time_start = datetime.datetime.now()
-
-    # for i in range(200):
-    #     value = random.randint(0,200)
-    #     container.update({
-    #         str(time_start):[time_start, value]
-    #     })
-        # time_start += datetime.timedelta(seconds=1)
-
-
-    # a = GraphGen(dates="2020-08-05",
-    #                 lives=False,
-    #                 devices="PH_Sensor")
     
