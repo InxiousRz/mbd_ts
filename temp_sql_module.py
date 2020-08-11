@@ -54,7 +54,7 @@ class TempQuerySQL():
         params = {
             'devicename': devicename,
             'recordtime': recordtime,
-            'values': values,
+            'error_type': error_type,
             'detailed_error': detailed_error,
         }
 
