@@ -1,1 +1,72 @@
-{"1": {"devicename": "TDS Sensor", "slave_id": "200", "port": "COM8", "comm_type": "B", "decimal_point": 4, "read_interval": "3", "register_data": {"10": {"sequence": "10", "register_address": 4, "register_alias": "tds_part_01"}, "20": {"sequence": "20", "register_address": 5, "register_alias": "tds_part_02"}}}, "2": {"devicename": "Ultrasonic 01", "slave_id": "200", "port": "COM8", "comm_type": "A", "decimal_point": 2, "read_interval": "3", "register_data": {"10": {"sequence": "10", "register_address": 2, "register_alias": "ultrasonic_01_full"}}}, "3": {"devicename": "Ultrasonic 02", "slave_id": "200", "port": "COM8", "comm_type": "A", "decimal_point": 2, "read_interval": "3", "register_data": {"10": {"sequence": "10", "register_address": 3, "register_alias": "ultrasonic_02_full"}}}, "4": {"devicename": "PH_Sensor", "slave_id": "200", "port": "COM8", "comm_type": "B", "decimal_point": 5, "read_interval": "3", "register_data": {"10": {"sequence": "10", "register_address": 6, "register_alias": "ph_part_01"}, "20": {"sequence": "20", "register_address": 7, "register_alias": "ph_part_02"}}}}
+{
+    "1": {
+        "devicename": "TDS Sensor",
+        "slave_id": "200",
+        "port": "COM8",
+        "comm_type": "B",
+        "decimal_point": 4,
+        "read_interval": "3",
+        "register_data": {
+            "10": {
+                "sequence": "10",
+                "register_address": 4,
+                "register_alias": "tds_part_01"
+            },
+            "20": {
+                "sequence": "20",
+                "register_address": 5,
+                "register_alias": "tds_part_02"
+            }
+        }
+    },
+    "2": {
+        "devicename": "Ultrasonic 01",
+        "slave_id": "200",
+        "port": "COM8",
+        "comm_type": "A",
+        "decimal_point": 2,
+        "read_interval": "3",
+        "register_data": {
+            "10": {
+                "sequence": "10",
+                "register_address": 2,
+                "register_alias": "ultrasonic_01_full"
+            }
+        }
+    },
+    "3": {
+        "devicename": "Ultrasonic 02",
+        "slave_id": "200",
+        "port": "COM8",
+        "comm_type": "A",
+        "decimal_point": 2,
+        "read_interval": "3",
+        "register_data": {
+            "10": {
+                "sequence": "10",
+                "register_address": 3,
+                "register_alias": "ultrasonic_02_full"
+            }
+        }
+    },
+    "4": {
+        "devicename": "PH_Sensor",
+        "slave_id": "200",
+        "port": "COM8",
+        "comm_type": "B",
+        "decimal_point": 5,
+        "read_interval": "3",
+        "register_data": {
+            "10": {
+                "sequence": "10",
+                "register_address": 6,
+                "register_alias": "ph_part_01"
+            },
+            "20": {
+                "sequence": "20",
+                "register_address": 7,
+                "register_alias": "ph_part_02"
+            }
+        }
+    }
+}
