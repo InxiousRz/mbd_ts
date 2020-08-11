@@ -126,6 +126,12 @@ class Modbus_Mod(OnRunUis):
                     raise Exception("Failed to Create Instrument")
 
         except Exception as e:
+            error_type = "PROGRAM"
+            devicename = "NONE"
+            recordtime = str(datetime.datetime.now())
+            detailed_error = f"INITIALIZE MODBUS READING ERROR :: {e}"
+            self._DirectDB.InsertError(error_type, devicename, recordtime, detailed_error)
+            
             print(e)
         else:
 
@@ -223,7 +229,7 @@ class Modbus_Mod(OnRunUis):
                                             end=max_reg,
                                             instrument=instrument)
         # print(data)
-
+        
         if read_ok:
             #Pickup only the used data and by owner
             read_result = {}
@@ -252,6 +258,12 @@ class Modbus_Mod(OnRunUis):
             return (True, formated_data)
     
         else:
+            error_type = "SYSTEM"
+            devicename = str(ownerlist)
+            recordtime = str(datetime.datetime.now())
+            detailed_error = f"READ REGISTERS {start} to {end} ERROR :: {data}"
+            self._DirectDB.InsertError(error_type, devicename, recordtime, detailed_error)
+
             return (False, None)
 
         
