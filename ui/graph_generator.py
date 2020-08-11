@@ -69,12 +69,12 @@ class GraphGen():
         self.date = dates
         self.x_axis_start = starts
         self.x_axis_end = ends
-        self.y_axis_max = valmax
-        self.y_axis_min = valmin
+        self.y_axis_max = float(valmax) + (float(valmax) * (10/100))
+        self.y_axis_min = float(valmin) - (float(valmax) * (10/100))
 
         #SERIES
         self.line, = self.ax.plot_date([], [],'-', lw=3, color='blue')
-        self.ax.set_ylim(int(self.y_axis_min), int(self.y_axis_max))
+        self.ax.set_ylim(self.y_axis_min, self.y_axis_max)
         self.ax.set_xlim(self.x_axis_start, self.x_axis_end)
         self.ax.set_xlabel('Time Record')
         self.ax.set_ylabel('Value ' + str(self.GR_UsedSensor))
