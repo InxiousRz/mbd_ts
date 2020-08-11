@@ -15,11 +15,13 @@ from temp_sql_module import TempQuerySQL
 from onrun_ui import OnRunUis
 
 
-locale.setlocale(locale.LC_ALL, 'en_US.utf8')
+
 
 class Modbus_Mod(OnRunUis):
     def __init__(self):
-
+        
+        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+        
         self._modbus_activity = {}
         self._modbus_read_schedule = {}
         self._DeviceValues_Filtered = {}
