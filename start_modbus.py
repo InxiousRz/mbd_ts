@@ -22,6 +22,13 @@ class Modbus_Mod(OnRunUis):
         
         locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
         
+        self._stoppedo_call = False
+        self._stoppedo_confirm = {}
+        self._stoppedo_confirm_record = False
+
+        self._startedo = False
+        self._startedo_record = False
+
         self._modbus_activity = {}
         self._modbus_read_schedule = {}
         self._DeviceValues_Filtered = {}
@@ -147,8 +154,8 @@ class Modbus_Mod(OnRunUis):
             #===========================================
             
 
-            self.DataReader()                
-            self.DataRecorder()
+            # self.DataReader()                
+            # self.DataRecorder()
             
 
             ## WX PYTHON
@@ -346,6 +353,8 @@ class Modbus_Mod(OnRunUis):
 
     # @threaded
     def DataReader(self):
+        self._startedo = True
+
         for serial_port in self._modbus_read_schedule:
             port_data = self._modbus_read_schedule[serial_port]
             slave_list = list(port_data.keys())
@@ -353,12 +362,21 @@ class Modbus_Mod(OnRunUis):
             #Port Read Thread
             self.PortReadThread(serial_port=serial_port, slave_list=slave_list)
 
+        
+
 
     @threaded
     def PortReadThread(self, serial_port, slave_list):
         print(f"START PORT READ ON {serial_port} and {slave_list}")
+        self._stoppedo_confirm.update({serial_port:False})
         while True:
             for slave_id in slave_list:
+
+                #STOP
+                if self._stoppedo_call:
+                    self._stoppedo_confirm.update({serial_port:True})
+                    return
+
                 self.SlaveRead(serial_port=serial_port, slave_id=slave_id)
                 interval_read = float(self._config.get("MOBUS_GENERAL","interval_read"))
                 sleep(interval_read)
@@ -392,7 +410,15 @@ class Modbus_Mod(OnRunUis):
     @threaded
     def DataRecorder(self):
         print("START DATA RECORDER")
+        
+        self._startedo_record = True
+
         while True:
+
+            #STOP
+            if self._stoppedo_call:
+                self._stoppedo_confirm_record = True
+                return
 
             #Check if Required To Save Record
             if bool(int(self._config.get("MOBUS_GENERAL","save_db"))):
@@ -411,6 +437,7 @@ class Modbus_Mod(OnRunUis):
             interval_read = float(self._config.get("MOBUS_GENERAL","interval_record"))
             sleep(interval_read)
 
+        
 
 if __name__ == "__main__":
     APPS = wx.App(False)

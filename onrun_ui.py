@@ -13,6 +13,7 @@ import wx.dataview
 import sys
 import wx.adv
 import datetime
+from time import sleep
 
 from ui.graph_generator import GraphGen
 
@@ -158,20 +159,20 @@ class OnRunUis ( wx.Frame ):
         ###
 
         self.m_panel5 = wx.Panel( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-        fgSizer10 = wx.FlexGridSizer( 1, 1, 0, 0 )
-        fgSizer10.SetFlexibleDirection( wx.BOTH )
-        fgSizer10.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		gSizer1 = wx.GridSizer( 1, 2, 0, 0 )
 
-        self.txt_notif = wx.StaticText( self.m_panel5, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.txt_notif.Wrap( -1 )
+		self.cmd_start6969 = wx.Button( self.m_panel5, wx.ID_ANY, u"START", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gSizer1.Add( self.cmd_start6969, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, 5 )
 
-        fgSizer10.Add( self.txt_notif, 0, wx.ALL, 5 )
+		self.cmd_stop6969 = wx.Button( self.m_panel5, wx.ID_ANY, u"STOP", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gSizer1.Add( self.cmd_stop6969, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
-        self.m_panel5.SetSizer( fgSizer10 )
-        self.m_panel5.Layout()
-        fgSizer10.Fit( self.m_panel5 )
-        fgSizer2.Add( self.m_panel5, 1, wx.EXPAND |wx.ALL, 5 )
+		self.m_panel5.SetSizer( gSizer1 )
+		self.m_panel5.Layout()
+		gSizer1.Fit( self.m_panel5 )
+		fgSizer2.Add( self.m_panel5, 1, wx.EXPAND |wx.ALL, 5 )
+
 
 
         self.m_panel1.SetSizer( fgSizer2 )
@@ -188,12 +189,68 @@ class OnRunUis ( wx.Frame ):
         # Connect Events
         self._Onrun_UI.Bind( wx.EVT_CLOSE, self.Destroye )
         self.cmd_generategraph.Bind( wx.EVT_BUTTON, self.generatedagraph )
+        self.cmd_start6969.Bind( wx.EVT_BUTTON, self.StartRecord )
+		self.cmd_stop6969.Bind( wx.EVT_BUTTON, self.StopRecord )
 
 
         
 
     def __del__( self ):
         pass
+
+    def StartRecord(self, event):
+        print("========================================")
+        print("START RECORDING ========================")
+        print("========================================")
+
+        self._stoppedo_call = False
+        self._stoppedo_confirm = {}
+        self._stoppedo_confirm_record = False
+
+        if self._startedo == False:
+            self.DataReader()                
+            self.DataRecorder()
+
+
+        print("========================================")
+        print("STARTING DONE ==========================")
+        print("========================================")
+
+    def StopRecord(self, event):
+
+        print("========================================")
+        print("START STOPPING =========================")
+        print("========================================")
+
+        self._stoppedo_call = True
+
+        #1
+        stope = False
+        while not stope:
+            if len(self._stoppedo_confirm) == 0:
+                stope = True
+            else:
+                values = list(self._stoppedo_confirm.values())
+                if True in values:
+                    pass
+                else:
+                    stope = True
+            
+            sleep(1)
+
+        #2
+        stope2 = False
+        while not stope2:
+            if self._stoppedo_confirm_record == True:
+                stope2 = True
+
+            sleep(1)
+
+        self._startedo = False
+    
+        print("========================================")
+        print("STOPPING DONE ==========================")
+        print("========================================")
     
     def generatedagraph(self, event):
         self.cmd_generategraph.Disable()

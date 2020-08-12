@@ -111,4 +111,3 @@ class GraphGen():
     def GpGetdate(self):
         res = datetime.date.today()
         return (res)
-    
