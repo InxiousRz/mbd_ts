@@ -193,65 +193,84 @@ class OnRunUis ( wx.Frame ):
 		self.cmd_stop6969.Bind( wx.EVT_BUTTON, self.StopRecord )
 
 
+
+        self.cmd_stop6969.Disable()
+
+
         
 
     def __del__( self ):
         pass
 
     def StartRecord(self, event):
-        print("========================================")
-        print("START RECORDING ========================")
-        print("========================================")
 
-        self._stoppedo_call = False
-        self._stoppedo_confirm = {}
-        self._stoppedo_confirm_record = False
+        self.cmd_start6969.Disable()
 
-        if self._startedo == False:
-            self.DataReader()                
-            self.DataRecorder()
+        try:
+            print("========================================")
+            print("START RECORDING ========================")
+            print("========================================")
+
+            self._stoppedo_call = False
+            self._stoppedo_confirm = {}
+            self._stoppedo_confirm_record = False
+
+            if self._startedo == False:
+                self.DataReader()                
+                self.DataRecorder()
 
 
-        print("========================================")
-        print("STARTING DONE ==========================")
-        print("========================================")
+            print("========================================")
+            print("STARTING DONE ==========================")
+            print("========================================")
+        except Exception as e:
+            self.StopRecord(None)
+            self.cmd_start6969.Enable()
+        else:
+            self.cmd_stop6969.Enable()
 
     def StopRecord(self, event):
 
-        print("========================================")
-        print("START STOPPING =========================")
-        print("========================================")
+        self.cmd_stop6969.Disable()
+        try:
+            print("========================================")
+            print("START STOPPING =========================")
+            print("========================================")
 
-        self._stoppedo_call = True
+            self._stoppedo_call = True
 
-        #1
-        stope = False
-        while not stope:
-            if len(self._stoppedo_confirm) == 0:
-                stope = True
-            else:
-                values = list(self._stoppedo_confirm.values())
-                if True in values:
-                    pass
-                else:
+            #1
+            stope = False
+            while not stope:
+                if len(self._stoppedo_confirm) == 0:
                     stope = True
-            
-            sleep(1)
+                else:
+                    values = list(self._stoppedo_confirm.values())
+                    if True in values:
+                        pass
+                    else:
+                        stope = True
+                
+                sleep(1)
 
-        #2
-        stope2 = False
-        while not stope2:
-            if self._stoppedo_confirm_record == True:
-                stope2 = True
+            #2
+            stope2 = False
+            while not stope2:
+                if self._stoppedo_confirm_record == True:
+                    stope2 = True
 
-            sleep(1)
+                sleep(1)
 
-        self._startedo = False
-    
-        print("========================================")
-        print("STOPPING DONE ==========================")
-        print("========================================")
-    
+            self._startedo = False
+        
+            print("========================================")
+            print("STOPPING DONE ==========================")
+            print("========================================")
+        except Exception as e:
+            self.cmd_stop6969.Enable()
+        else:
+            self.cmd_start6969.Enable()
+
     def generatedagraph(self, event):
         self.cmd_generategraph.Disable()
         dates = self.date_picker_01.GetValue() #8/10/2020 12:00:00 AM
