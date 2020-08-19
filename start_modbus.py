@@ -324,7 +324,6 @@ class Modbus_Mod(OnRunUis):
 
             # A to B Filter
             if str(read_type).upper() == "A":
-                # print(f"========== {read_content}")
                 result = float(read_content[0])
                 if decimal_point != 0:
                     result = result / (10 ** int(decimal_point))
@@ -339,13 +338,11 @@ class Modbus_Mod(OnRunUis):
                 
                 result = ''
 
-                #New 
+                #New
                 lenght_data = len(read_content)
                 for i in range(lenght_data):
                     result += read_content[(lenght_data-1)-i]
 
-                # print(result)
-                # print(len(result))
                 result = float(struct.unpack('!f', bytes.fromhex(str(result)))[0])
 
                 #No Decimal Point for B
@@ -397,9 +394,6 @@ class Modbus_Mod(OnRunUis):
             #Port Read Thread
             self.PortReadThread(serial_port=serial_port, slave_list=slave_list)
 
-        
-
-
     @threaded
     def PortReadThread(self, serial_port, slave_list):
         print(f"START PORT READ ON {serial_port} and {slave_list}")
@@ -415,6 +409,7 @@ class Modbus_Mod(OnRunUis):
                 self.SlaveRead(serial_port=serial_port, slave_id=slave_id)
                 interval_read = float(self._config.get("MOBUS_GENERAL","interval_read"))
                 sleep(interval_read)
+
 
     # @threaded            
     def SlaveRead(self, serial_port, slave_id):
@@ -450,8 +445,6 @@ class Modbus_Mod(OnRunUis):
 
         while True:
             try:
-                
-
                 #STOP
                 if self._stoppedo_call:
                     self._stoppedo_confirm_record = True
@@ -476,18 +469,28 @@ class Modbus_Mod(OnRunUis):
             except Exception as e:
                 logger.error(e, exc_info=True)
 
-                error_type = "PROGRAM"
-                devicename = "NONE"
-                recordtime = str(datetime.datetime.now())
-                detailed_error = f"MODBUS RECORDING ERROR :: {e}"
-                self._DirectDB.InsertError(error_type, devicename, recordtime, detailed_error)
-            
+                try:
+                    error_type = "PROGRAM"
+                    devicename = "NONE"
+                    recordtime = str(datetime.datetime.now())
+                    detailed_error = f"MODBUS RECORDING ERROR :: {e}"
+                    self._DirectDB.InsertError(error_type, devicename, recordtime, detailed_error)
+                except Exception:
+                    pass
+
                 print(e)
                 sleep(60)
 
 
-        
+    def SaveJSON(self, dates, data):
+        with open(f'{dates}.json', 'a+') as jsonfile:
+            json.dump(jsondata, json_file, indent=4)
 
+    def SaveJSON(self):
+        with open(f'{dates}.json', 'a+') as jsonfile:
+            json.load(jsondata)
+
+        
 if __name__ == "__main__":
     APPS = wx.App(False)
     a = Modbus_Mod()
