@@ -1,6 +1,22 @@
 import psycopg2
 import datetime
 
+import logging
+#Logger
+# Create a custom logger
+logger = logging.getLogger(__name__)
+folders = "log_files"
+f_handler = logging.FileHandler(f'.\{folders}\{__name__}.log', 'a+')
+f_handler.setLevel(logging.ERROR)
+ 
+# Create formatters and add it to handlers
+f_format = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+f_handler.setFormatter(f_format)
+ 
+# Add handlers to the logger
+logger.addHandler(f_handler)
+
 class TempQuerySQL_2():
     def __init__(self):
         pass
@@ -36,6 +52,7 @@ class TempQuerySQL_2():
             elif types == 4:
                 data = cur.fetchall()
         except Exception as e:
+            logger.error(e, exc_info=True)
             self._DB_CONN.rollback()
             ok = False
             data = None
@@ -55,45 +72,51 @@ class TempQuerySQL_2():
     ##===============================================================================
 
     def GetDataSample(self, devicename, recorddate):
-        
-        container = {}
+        try:
+            container = {}
 
-        sql = """
-                --GET DATA SAMPLE
-                SELECT
-                    recordtime,
-                    values
-                FROM trial_datasample_rooftop
-                WHERE devicename = %(devicename)s AND
-                CAST(recordtime as date) = %(recorddate)s --'2020-08-05'
-                ORDER BY recordtime asc
-        """
+            sql = """
+                    --GET DATA SAMPLE
+                    SELECT
+                        recordtime,
+                        values
+                    FROM trial_datasample_rooftop
+                    WHERE devicename = %(devicename)s AND
+                    CAST(recordtime as date) = %(recorddate)s --'2020-08-05'
+                    ORDER BY recordtime asc
+            """
 
-        params = {
-            'devicename': devicename,
-            'recorddate': recorddate
-        }
+            params = {
+                'devicename': devicename,
+                'recorddate': recorddate
+            }
 
-        #Execute
-        ok, data, err = self.RunGeneralQuery(string_query=sql,
-                                             params=params,
-                                             types=4)
+            #Execute
+            ok, data, err = self.RunGeneralQuery(string_query=sql,
+                                                params=params,
+                                                types=4)
 
-        if ok:
+            if ok:
 
-            # print(data)
+                # print(data)
 
-            #FORMAT DATA
-            for row in data:
-                # converted_datetime = datetime.datetime.strftime(row[0],"%Y-%m-%d %H:%M:%S.%f")
-                converted_datetime = row[0]
-                data_detail = [converted_datetime, float(row[1])]
-                container.update({str(row[0]): data_detail})
+                #FORMAT DATA
+                for row in data:
+                    # converted_datetime = datetime.datetime.strftime(row[0],"%Y-%m-%d %H:%M:%S.%f")
+                    converted_datetime = row[0]
+                    data_detail = [converted_datetime, float(row[1])]
+                    container.update({str(row[0]): data_detail})
 
-            print(container)
-            return (container)
-        else:
+                print(container)
+                return (container)
+            else:
+                return (None)
+
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            print(e)
             return (None)
+
 
 
 # if __name__ == "__main__":

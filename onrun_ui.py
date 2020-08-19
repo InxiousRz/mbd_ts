@@ -14,8 +14,28 @@ import sys
 import wx.adv
 import datetime
 from time import sleep
+import threading
 
+import logging
 from ui.graph_generator import GraphGen
+
+#Logger
+# Create a custom logger
+logger = logging.getLogger(__name__)
+folders = "log_files"
+f_handler = logging.FileHandler(f'.\{folders}\{__name__}.log', 'a+')
+f_handler.setLevel(logging.ERROR)
+ 
+# Create formatters and add it to handlers
+f_format = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+f_handler.setFormatter(f_format)
+ 
+# Add handlers to the logger
+logger.addHandler(f_handler)
+
+
+
 
 ###########################################################################
 ## Class MyFrame1
@@ -24,7 +44,7 @@ from ui.graph_generator import GraphGen
 class OnRunUis ( wx.Frame ):
 
     def __init__( self ):
-        self._Onrun_UI = wx.Frame(None, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 927,556 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+        self._Onrun_UI = wx.Frame(None, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 927,596 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 
         self._Onrun_UI.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
         self._Onrun_UI.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
@@ -159,19 +179,19 @@ class OnRunUis ( wx.Frame ):
         ###
 
         self.m_panel5 = wx.Panel( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		gSizer1 = wx.GridSizer( 1, 2, 0, 0 )
+        gSizer1 = wx.GridSizer( 1, 2, 0, 0 )
 
-		self.cmd_start6969 = wx.Button( self.m_panel5, wx.ID_ANY, u"START", wx.DefaultPosition, wx.DefaultSize, 0 )
-		gSizer1.Add( self.cmd_start6969, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, 5 )
+        self.cmd_start6969 = wx.Button( self.m_panel5, wx.ID_ANY, u"START", wx.DefaultPosition, wx.DefaultSize, 0 )
+        gSizer1.Add( self.cmd_start6969, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, 5 )
 
-		self.cmd_stop6969 = wx.Button( self.m_panel5, wx.ID_ANY, u"STOP", wx.DefaultPosition, wx.DefaultSize, 0 )
-		gSizer1.Add( self.cmd_stop6969, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+        self.cmd_stop6969 = wx.Button( self.m_panel5, wx.ID_ANY, u"STOP", wx.DefaultPosition, wx.DefaultSize, 0 )
+        gSizer1.Add( self.cmd_stop6969, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
 
-		self.m_panel5.SetSizer( gSizer1 )
-		self.m_panel5.Layout()
-		gSizer1.Fit( self.m_panel5 )
-		fgSizer2.Add( self.m_panel5, 1, wx.EXPAND |wx.ALL, 5 )
+        self.m_panel5.SetSizer( gSizer1 )
+        self.m_panel5.Layout()
+        gSizer1.Fit( self.m_panel5 )
+        fgSizer2.Add( self.m_panel5, 1, wx.EXPAND |wx.ALL, 5 )
 
 
 
@@ -190,18 +210,29 @@ class OnRunUis ( wx.Frame ):
         self._Onrun_UI.Bind( wx.EVT_CLOSE, self.Destroye )
         self.cmd_generategraph.Bind( wx.EVT_BUTTON, self.generatedagraph )
         self.cmd_start6969.Bind( wx.EVT_BUTTON, self.StartRecord )
-		self.cmd_stop6969.Bind( wx.EVT_BUTTON, self.StopRecord )
+        self.cmd_stop6969.Bind( wx.EVT_BUTTON, self.StopRecord )
 
 
 
         self.cmd_stop6969.Disable()
 
 
+    def threaded(fn):
+        def wrapper(*args, **kwargs):
+            thread = threading.Thread(target=fn, args=args, kwargs=kwargs)
+            thread.setDaemon(True)
+            thread.start()
+            sleep(0.1)
+            return (thread)
+
+        return (wrapper)
+
         
 
     def __del__( self ):
         pass
 
+    @threaded
     def StartRecord(self, event):
 
         self.cmd_start6969.Disable()
@@ -224,11 +255,13 @@ class OnRunUis ( wx.Frame ):
             print("STARTING DONE ==========================")
             print("========================================")
         except Exception as e:
+            logger.error(e, exc_info=True)
             self.StopRecord(None)
             self.cmd_start6969.Enable()
         else:
             self.cmd_stop6969.Enable()
 
+    @threaded
     def StopRecord(self, event):
 
         self.cmd_stop6969.Disable()
@@ -267,6 +300,7 @@ class OnRunUis ( wx.Frame ):
             print("STOPPING DONE ==========================")
             print("========================================")
         except Exception as e:
+            logger.error(e, exc_info=True)
             self.cmd_stop6969.Enable()
         else:
             self.cmd_start6969.Enable()

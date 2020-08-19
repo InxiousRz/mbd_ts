@@ -14,6 +14,23 @@ import locale
 from temp_sql_module import TempQuerySQL
 from onrun_ui import OnRunUis
 
+import logging
+
+#Logger
+# Create a custom logger
+logger = logging.getLogger(__name__)
+folders = "log_files"
+f_handler = logging.FileHandler(f'.\{folders}\{__name__}.log', 'a+')
+f_handler.setLevel(logging.ERROR)
+ 
+# Create formatters and add it to handlers
+f_format = logging.Formatter(
+    '%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+f_handler.setFormatter(f_format)
+ 
+# Add handlers to the logger
+logger.addHandler(f_handler)
+
 
 
 
@@ -138,6 +155,7 @@ class Modbus_Mod(OnRunUis):
                     raise Exception("Failed to Create Instrument")
 
         except Exception as e:
+            logger.error(e, exc_info=True)
             error_type = "PROGRAM"
             devicename = "NONE"
             recordtime = str(datetime.datetime.now())
@@ -189,6 +207,7 @@ class Modbus_Mod(OnRunUis):
             instrument.serial.timeout = float(self._config.get("MOBUS_GENERAL","timeout"))
             
         except Exception as e:
+            logger.error(e, exc_info=True)
             print(f'Create Modbus Master ERROR :: {e}')
             return (False, e)
         else:
@@ -202,6 +221,7 @@ class Modbus_Mod(OnRunUis):
                 number_of_decimals=0,
                 functioncode=3)
         except Exception as e:
+            logger.error(e, exc_info=True)
             print(f'Read Register {registeraddress} ERROR :: {e}')
             return (False, e)
         else:
@@ -213,6 +233,7 @@ class Modbus_Mod(OnRunUis):
             number_of_registers=int(end)-int(start)+1, functioncode=3)
             #note max number registers is 125 , bug for the future
         except Exception as e:
+            logger.error(e, exc_info=True)
             print(f'Read Registers {start} -> {end} :: {int(end)-int(start)} ERROR :: {e}')
             return (False, e)
         else:
@@ -223,61 +244,73 @@ class Modbus_Mod(OnRunUis):
 
     def ReadJob(self, serial_port, slave_id):
 
-        job_data = self._modbus_read_schedule[serial_port][slave_id]
+        try:
+            job_data = self._modbus_read_schedule[serial_port][slave_id]
 
-        instrument = job_data["instrument"]
-        ownerlist = job_data["register_owner"]
+            instrument = job_data["instrument"]
+            ownerlist = job_data["register_owner"]
 
-        #Well this for convenienve
-        register_address_list = [ int(x) for x in job_data["register_list"] ]
-        register_address_list.sort()
+            #Well this for convenienve
+            register_address_list = [ int(x) for x in job_data["register_list"] ]
+            register_address_list.sort()
+            
+            #order it up, and do some math
+            min_reg = min(register_address_list)
+            max_reg = max(register_address_list)
+            reg_range = max_reg-min_reg + 1
+
+            read_ok, data = self.ReadRegisters(start=min_reg,
+                                                end=max_reg,
+                                                instrument=instrument)
+            # print(data)
+            
+            if read_ok:
+                #Pickup only the used data and by owner
+                read_result = {}
+                for deviceattachdetailid in ownerlist.keys():
+                    owner_data = ownerlist[deviceattachdetailid]
+                    read_result.update({deviceattachdetailid:[]})
+
+                    #Get Data for this owner
+                    for seq in owner_data:
+                        register_data = owner_data[seq]
+                        register_addr = register_data['register_address']
+
+                        #Get Specified data per sequence
+                        data_for_you = data[int(register_addr)-int(min_reg)]
+                        read_result[deviceattachdetailid].append(data_for_you)
+
+
+                # print(read_result)
+
+                #Reform Data
+                formated_data = self.ReformData(read_data=read_result)
+
+                #Data Filter
+                self.DataFilter(read_data=formated_data)
+
+                return (True, formated_data)
         
-        #order it up, and do some math
-        min_reg = min(register_address_list)
-        max_reg = max(register_address_list)
-        reg_range = max_reg-min_reg + 1
+            else:
+                error_type = "SYSTEM"
+                devicename = str(ownerlist)
+                recordtime = str(datetime.datetime.now())
+                detailed_error = f"READ REGISTERS {start} to {end} ERROR :: {data}"
+                self._DirectDB.InsertError(error_type, devicename, recordtime, detailed_error)
+                
 
-        read_ok, data = self.ReadRegisters(start=min_reg,
-                                            end=max_reg,
-                                            instrument=instrument)
-        # print(data)
-        
-        if read_ok:
-            #Pickup only the used data and by owner
-            read_result = {}
-            for deviceattachdetailid in ownerlist.keys():
-                owner_data = ownerlist[deviceattachdetailid]
-                read_result.update({deviceattachdetailid:[]})
+                return (False, None)
+        except Exception as e:
+            logger.error(e, exc_info=True)
 
-                #Get Data for this owner
-                for seq in owner_data:
-                    register_data = owner_data[seq]
-                    register_addr = register_data['register_address']
-
-                    #Get Specified data per sequence
-                    data_for_you = data[int(register_addr)-int(min_reg)]
-                    read_result[deviceattachdetailid].append(data_for_you)
-
-
-            # print(read_result)
-
-            #Reform Data
-            formated_data = self.ReformData(read_data=read_result)
-
-            #Data Filter
-            self.DataFilter(read_data=formated_data)
-
-            return (True, formated_data)
-    
-        else:
-            error_type = "SYSTEM"
-            devicename = str(ownerlist)
+            error_type = "PROGRAM"
+            devicename = "NONE"
             recordtime = str(datetime.datetime.now())
-            detailed_error = f"READ REGISTERS {start} to {end} ERROR :: {data}"
+            detailed_error = f"READ JOB ERROR :: {e}"
             self._DirectDB.InsertError(error_type, devicename, recordtime, detailed_error)
 
-            return (False, None)
-
+            print(e)
+            return(False, None)
         
         
 
@@ -311,6 +344,8 @@ class Modbus_Mod(OnRunUis):
                 for i in range(lenght_data):
                     result += read_content[(lenght_data-1)-i]
 
+                # print(result)
+                # print(len(result))
                 result = float(struct.unpack('!f', bytes.fromhex(str(result)))[0])
 
                 #No Decimal Point for B
@@ -414,28 +449,42 @@ class Modbus_Mod(OnRunUis):
         self._startedo_record = True
 
         while True:
+            try:
+                
 
-            #STOP
-            if self._stoppedo_call:
-                self._stoppedo_confirm_record = True
-                return
+                #STOP
+                if self._stoppedo_call:
+                    self._stoppedo_confirm_record = True
+                    return
 
-            #Check if Required To Save Record
-            if bool(int(self._config.get("MOBUS_GENERAL","save_db"))):
+                #Check if Required To Save Record
+                if bool(int(self._config.get("MOBUS_GENERAL","save_db"))):
 
-                #save to DB
-                list_act = self._modbus_activity.keys()
-                time_record = str(datetime.datetime.now())
-                for item in list_act:
-                    item_data = self._modbus_activity[item]
-                    devicename = item_data["devicename"]
-                    values = self._DeviceValues_Filtered[item]
-                    print(f"RECORD {devicename} :: {values}")
-                    if values != None:
-                        self._DirectDB.InsertDataSample(devicename,time_record,values)
+                    #save to DB
+                    list_act = self._modbus_activity.keys()
+                    time_record = str(datetime.datetime.now())
+                    for item in list_act:
+                        item_data = self._modbus_activity[item]
+                        devicename = item_data["devicename"]
+                        values = self._DeviceValues_Filtered[item]
+                        print(f"RECORD {devicename} :: {values}")
+                        if values != None:
+                            self._DirectDB.InsertDataSample(devicename,time_record,values)
 
-            interval_read = float(self._config.get("MOBUS_GENERAL","interval_record"))
-            sleep(interval_read)
+                interval_read = float(self._config.get("MOBUS_GENERAL","interval_record"))
+                sleep(interval_read)
+            except Exception as e:
+                logger.error(e, exc_info=True)
+
+                error_type = "PROGRAM"
+                devicename = "NONE"
+                recordtime = str(datetime.datetime.now())
+                detailed_error = f"MODBUS RECORDING ERROR :: {e}"
+                self._DirectDB.InsertError(error_type, devicename, recordtime, detailed_error)
+            
+                print(e)
+                sleep(60)
+
 
         
 
