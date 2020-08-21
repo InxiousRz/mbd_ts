@@ -38,6 +38,10 @@ class Modbus_Mod(OnRunUis):
     def __init__(self):
         
         locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+
+        ##JSON Save
+        self._TempDataJson = {}
+        #=========================
         
         self._stoppedo_call = False
         self._stoppedo_confirm = {}
@@ -443,6 +447,10 @@ class Modbus_Mod(OnRunUis):
         
         self._startedo_record = True
 
+        #PRELOAD LOCAL DB
+        datenow = str(datetime.date.today())
+        self._TempDataJson[datenow] = self.LoadJSON(datenow)
+
         while True:
             try:
                 #STOP
@@ -453,15 +461,24 @@ class Modbus_Mod(OnRunUis):
                 #Check if Required To Save Record
                 if bool(int(self._config.get("MOBUS_GENERAL","save_db"))):
 
+                    datenow = str(datetime.date.today())
+                    time_record = str(datetime.datetime.now())
+
                     #save to DB
                     list_act = self._modbus_activity.keys()
-                    time_record = str(datetime.datetime.now())
                     for item in list_act:
                         item_data = self._modbus_activity[item]
                         devicename = item_data["devicename"]
                         values = self._DeviceValues_Filtered[item]
                         print(f"RECORD {devicename} :: {values}")
                         if values != None:
+                            #Local
+                            if self._TempDataJson[datenow].get(devicename) == None:
+                                self._TempDataJson[datenow][devicename] = {}
+                                  
+                            self._TempDataJson[datenow][devicename].update({str(time_record):values})
+
+                            #DB
                             self._DirectDB.InsertDataSample(devicename,time_record,values)
 
                 interval_read = float(self._config.get("MOBUS_GENERAL","interval_record"))
@@ -482,13 +499,64 @@ class Modbus_Mod(OnRunUis):
                 sleep(60)
 
 
-    def SaveJSON(self, dates, data):
-        with open(f'{dates}.json', 'a+') as jsonfile:
+    def SaveJSON(self, dates, jsondata):
+        with open(f'offline_db\\{dates}.json', 'w+') as jsonfile:
             json.dump(jsondata, json_file, indent=4)
 
-    def SaveJSON(self):
-        with open(f'{dates}.json', 'a+') as jsonfile:
-            json.load(jsondata)
+    def LoadJSON(self, dates):
+        if os.path.exists(f'offline_db\\{dates}.csv'):
+            with open(f'{dates}.json', 'r') as jsonfile:
+                jsondata = json.load(jsonfile)
+                return(jsondata)
+        else:
+            with open(f'offline_db\\{dates}.json', 'w+') as jsonfile:
+                json.dump({}, json_file, indent=4)
+
+            return({})
+
+
+    @threaded
+    def SaveJSONLoop(self):
+        
+        datebefore = datetime.date.today()
+        while True:
+            try:
+                datenow = datetime.date.today()
+
+                dategap = (datenow - datebefore).days
+                if dategap > 0:
+                    #SAVE DATEBEFORE
+                    looped = dategap
+                    for i in range(looped):
+                        date_is = datetime.timedelta(days=dategap)
+                        data = self._TempDataJson[datenow]
+                        for device_name in data.keys():
+                            data_dev = data[device_name]
+                            data[device_name] = {} #Empty 'ed
+                            self.SaveJSON(date_is, data_dev)
+                        
+                        dategap -= 1
+                    
+                    #DELETE
+                    backup = self._TempDataJson[datenow]
+                    self._TempDataJson = {datenow:backup}
+
+                    #SET DATE BEFORE
+                    datebefore = datenow
+
+                else:
+                    #SAVE DATENOW
+                    data = self._TempDataJson[datenow]
+                    for device_name in data.keys():
+                        data_dev = data[device_name]
+                        data[device_name] = {} #Empty 'ed
+                        self.SaveJSON(datenow, data_dev)
+
+                    
+            except Exception as e:
+                self._TempDataJson[datenow] = data
+                
+            sleep(3600)
 
         
 if __name__ == "__main__":
