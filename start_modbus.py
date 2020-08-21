@@ -531,7 +531,7 @@ class Modbus_Mod(OnRunUis):
     @threaded
     def SaveJSONLoop(self):
         
-        sleep(10)
+        # sleep(10)
 
         self._startedo_record2 = True
 

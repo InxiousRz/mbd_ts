@@ -251,6 +251,8 @@ class OnRunUis ( wx.Frame ):
                 self.DataRecorder()
                 self.SaveJSONLoop()
 
+            sleep(5)
+
 
             print("========================================")
             print("STARTING DONE ==========================")
