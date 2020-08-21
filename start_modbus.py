@@ -439,6 +439,7 @@ class Modbus_Mod(OnRunUis):
             #==========================
             self.AddItemToLb(f"COM-SLAVE {serial_port} - {slave_id} ::ERROR")
             #==========================
+            sleep(5)
 
         # except Exception as e:
         #     print(e)
