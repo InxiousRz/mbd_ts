@@ -10,6 +10,7 @@ import struct
 import sys
 import wx
 import locale
+import os
 
 from temp_sql_module import TempQuerySQL
 from onrun_ui import OnRunUis
@@ -451,7 +452,7 @@ class Modbus_Mod(OnRunUis):
 
         #PRELOAD LOCAL DB
         datenow = str(datetime.date.today())
-        self._TempDataJson[datenow] = self.LoadJSON(datenow)
+        self._TempDataJson[str(datenow)] = self.LoadJSON(datenow)
 
         while True:
             try:
@@ -476,10 +477,10 @@ class Modbus_Mod(OnRunUis):
                         print(f"RECORD {devicename} :: {values}")
                         if values != None:
                             #Local
-                            if self._TempDataJson[datenow].get(devicename) == None:
-                                self._TempDataJson[datenow][devicename] = {}
+                            if self._TempDataJson[str(datenow)].get(devicename) == None:
+                                self._TempDataJson[str(datenow)][devicename] = {}
 
-                            self._TempDataJson[datenow][devicename].update({str(time_record):values})
+                            self._TempDataJson[str(datenow)][devicename].update({str(time_record):values})
 
                             #DB
                             self._DirectDB.InsertDataSample(devicename,time_record,values)
@@ -553,7 +554,7 @@ class Modbus_Mod(OnRunUis):
                     looped = dategap
                     for i in range(looped):
                         date_is = datetime.timedelta(days=dategap)
-                        data = self._TempDataJson[datenow]
+                        data = self._TempDataJson[str(datenow)]
                         for device_name in data.keys():
                             data_dev = data[device_name]
                             data[device_name] = {} #Empty 'ed
@@ -562,15 +563,15 @@ class Modbus_Mod(OnRunUis):
                         dategap -= 1
                     
                     #DELETE
-                    backup = self._TempDataJson[datenow]
-                    self._TempDataJson = {datenow:backup}
+                    backup = self._TempDataJson[str(datenow)]
+                    self._TempDataJson = {str(datenow):backup}
 
                     #SET DATE BEFORE
                     datebefore = datenow
 
                 else:
                     #SAVE DATENOW
-                    data = self._TempDataJson[datenow]
+                    data = self._TempDataJson[str(datenow)]
                     for device_name in data.keys():
                         data_dev = data[device_name]
                         data[device_name] = {} #Empty 'ed
