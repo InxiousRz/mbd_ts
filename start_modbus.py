@@ -501,7 +501,7 @@ class Modbus_Mod(OnRunUis):
 
                 print(e)
                 # sleep(60)
-                for i in range(60/6):
+                for i in range(int(60/6)):
                     #STOP
                     if self._stoppedo_call:
                         self._stoppedo_confirm_record = True
@@ -514,7 +514,7 @@ class Modbus_Mod(OnRunUis):
 
     def SaveJSON(self, dates, jsondata):
         with open(f'offline_db\\{dates}.json', 'w+') as jsonfile:
-            json.dump(jsondata, json_file, indent=4)
+            json.dump(jsondata, jsonfile, indent=4)
 
     def LoadJSON(self, dates):
         if os.path.exists(f'offline_db\\{dates}.csv'):
@@ -523,7 +523,7 @@ class Modbus_Mod(OnRunUis):
                 return(jsondata)
         else:
             with open(f'offline_db\\{dates}.json', 'w+') as jsonfile:
-                json.dump({}, json_file, indent=4)
+                json.dump({}, jsonfile, indent=4)
 
             return({})
 
@@ -582,7 +582,7 @@ class Modbus_Mod(OnRunUis):
                 logger.error(e, exc_info=True)
                 
             # sleep(3600)
-            for i in range(3600/10):
+            for i in range(int(3600/10)):
                 #STOP
                 if self._stoppedo_call:
                     self._stoppedo_confirm_record2 = True
