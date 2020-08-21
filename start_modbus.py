@@ -49,6 +49,7 @@ class Modbus_Mod(OnRunUis):
 
         self._startedo = False
         self._startedo_record = False
+        self._startedo_record2 = False
 
         self._modbus_activity = {}
         self._modbus_read_schedule = {}
@@ -178,6 +179,7 @@ class Modbus_Mod(OnRunUis):
 
             # self.DataReader()                
             # self.DataRecorder()
+            # self.SaveJSONLoop()
             
 
             ## WX PYTHON
@@ -456,6 +458,7 @@ class Modbus_Mod(OnRunUis):
                 #STOP
                 if self._stoppedo_call:
                     self._stoppedo_confirm_record = True
+                    self._startedo_record = False
                     return
 
                 #Check if Required To Save Record
@@ -475,7 +478,7 @@ class Modbus_Mod(OnRunUis):
                             #Local
                             if self._TempDataJson[datenow].get(devicename) == None:
                                 self._TempDataJson[datenow][devicename] = {}
-                                  
+
                             self._TempDataJson[datenow][devicename].update({str(time_record):values})
 
                             #DB
@@ -496,7 +499,16 @@ class Modbus_Mod(OnRunUis):
                     pass
 
                 print(e)
-                sleep(60)
+                # sleep(60)
+                for i in range(60/6):
+                    #STOP
+                    if self._stoppedo_call:
+                        self._stoppedo_confirm_record = True
+                        self._startedo_record = False
+                        return
+                    sleep(10)
+        
+        self._startedo_record = False
 
 
     def SaveJSON(self, dates, jsondata):
@@ -518,8 +530,20 @@ class Modbus_Mod(OnRunUis):
     @threaded
     def SaveJSONLoop(self):
         
+        sleep(10)
+
+        self._startedo_record2 = True
+
+        print("START JSON LOOP SAVE")
         datebefore = datetime.date.today()
         while True:
+
+            #STOP
+            if self._stoppedo_call:
+                self._stoppedo_confirm_record2 = True
+                self._startedo_record2 = False
+                return
+
             try:
                 datenow = datetime.date.today()
 
@@ -554,9 +578,18 @@ class Modbus_Mod(OnRunUis):
 
                     
             except Exception as e:
-                self._TempDataJson[datenow] = data
+                logger.error(e, exc_info=True)
                 
-            sleep(3600)
+            # sleep(3600)
+            for i in range(3600/10):
+                #STOP
+                if self._stoppedo_call:
+                    self._stoppedo_confirm_record2 = True
+                    self._startedo_record2 = False
+                    return
+                sleep(10)
+
+        self._startedo_record2 = False
 
         
 if __name__ == "__main__":

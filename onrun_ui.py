@@ -249,6 +249,7 @@ class OnRunUis ( wx.Frame ):
             if self._startedo == False:
                 self.DataReader()                
                 self.DataRecorder()
+                self.SaveJSONLoop()
 
 
             print("========================================")
@@ -291,6 +292,14 @@ class OnRunUis ( wx.Frame ):
             while not stope2:
                 if self._stoppedo_confirm_record == True:
                     stope2 = True
+
+                sleep(1)
+
+            #3
+            stope3 = False
+            while not stope3:
+                if self._stoppedo_confirm_record2 == True:
+                    stope3 = True
 
                 sleep(1)
 
