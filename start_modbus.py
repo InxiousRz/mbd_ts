@@ -478,6 +478,9 @@ class Modbus_Mod(OnRunUis):
                         print(f"RECORD {devicename} :: {values}")
                         if values != None:
                             #Local
+                            if self._TempDataJson.get(str(datenow)) == None:
+                                self._TempDataJson[str(datenow)] = {}
+                                
                             if self._TempDataJson[str(datenow)].get(devicename) == None:
                                 self._TempDataJson[str(datenow)][devicename] = {}
 
@@ -554,8 +557,8 @@ class Modbus_Mod(OnRunUis):
                     #SAVE DATEBEFORE
                     looped = dategap
                     for i in range(looped):
-                        date_is = datetime.timedelta(days=dategap)
-                        data = self._TempDataJson[str(datenow)]
+                        date_is = datenow - datetime.timedelta(days=dategap)
+                        data = self._TempDataJson[str(date_is)]
                         for device_name in data.keys():
                             data_dev = data[device_name]
                             data[device_name] = {} #Empty 'ed
