@@ -477,14 +477,18 @@ class Modbus_Mod(OnRunUis):
                         values = self._DeviceValues_Filtered[item]
                         print(f"RECORD {devicename} :: {values}")
                         if values != None:
-                            #Local
-                            if self._TempDataJson.get(str(datenow)) == None:
-                                self._TempDataJson[str(datenow)] = {}
-                                
-                            if self._TempDataJson[str(datenow)].get(devicename) == None:
-                                self._TempDataJson[str(datenow)][devicename] = {}
 
-                            self._TempDataJson[str(datenow)][devicename].update({str(time_record):values})
+                            try:
+                                #Local
+                                if self._TempDataJson.get(str(datenow)) == None:
+                                    self._TempDataJson[str(datenow)] = {}
+
+                                if self._TempDataJson[str(datenow)].get(devicename) == None:
+                                    self._TempDataJson[str(datenow)][devicename] = {}
+
+                                self._TempDataJson[str(datenow)][devicename].update({str(time_record):values})
+                            except Exception as e:
+                                pass
 
                             #DB
                             self._DirectDB.InsertDataSample(devicename,time_record,values)
@@ -543,13 +547,13 @@ class Modbus_Mod(OnRunUis):
         datebefore = datetime.date.today()
         while True:
 
-            #STOP
-            if self._stoppedo_call:
-                self._stoppedo_confirm_record2 = True
-                self._startedo_record2 = False
-                return
-
             try:
+                #STOP
+                if self._stoppedo_call:
+                    self._stoppedo_confirm_record2 = True
+                    self._startedo_record2 = False
+                    return
+
                 datenow = datetime.date.today()
 
                 dategap = (datenow - datebefore).days
