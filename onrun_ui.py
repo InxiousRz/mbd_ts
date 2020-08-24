@@ -316,7 +316,7 @@ class OnRunUis ( wx.Frame ):
         else:
             self.cmd_start6969.Enable()
 
-    @threaded
+    # @threaded
     def generatedagraph(self, event):
         self.cmd_generategraph.Disable()
         dates = self.date_picker_01.GetValue() #8/10/2020 12:00:00 AM
