@@ -477,18 +477,19 @@ class Modbus_Mod(OnRunUis):
                         values = self._DeviceValues_Filtered[item]
                         print(f"RECORD {devicename} :: {values}")
                         if values != None:
+                            
+                            if str(devicename) == 'PH_Sensor':
+                                try:
+                                    #Local
+                                    if self._TempDataJson.get(str(datenow)) == None:
+                                        self._TempDataJson[str(datenow)] = {}
 
-                            try:
-                                #Local
-                                if self._TempDataJson.get(str(datenow)) == None:
-                                    self._TempDataJson[str(datenow)] = {}
+                                    # if self._TempDataJson[str(datenow)].get(devicename) == None:
+                                    #     self._TempDataJson[str(datenow)] = {}
 
-                                if self._TempDataJson[str(datenow)].get(devicename) == None:
-                                    self._TempDataJson[str(datenow)][devicename] = {}
-
-                                self._TempDataJson[str(datenow)][devicename].update({str(time_record):values})
-                            except Exception as e:
-                                pass
+                                    self._TempDataJson[str(datenow)].update({str(time_record):values})
+                                except Exception as e:
+                                    pass
 
                             #DB
                             self._DirectDB.InsertDataSample(devicename,time_record,values)
@@ -580,10 +581,10 @@ class Modbus_Mod(OnRunUis):
                 else:
                     #SAVE DATENOW
                     data = self._TempDataJson[str(datenow)]
-                    for device_name in data.keys():
-                        data_dev = data[device_name]
-                        data[device_name] = {} #Empty 'ed
-                        self.SaveJSON(datenow, data_dev)
+                    # for device_name in data.keys():
+                    #     data_dev = data[device_name]
+                    #     data[device_name] = {} #Empty 'ed
+                    self.SaveJSON(datenow, data)
 
                     
             except Exception as e:
