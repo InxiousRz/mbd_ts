@@ -130,7 +130,7 @@ class OnRunUis ( wx.Frame ):
         ###
         
         self.m_panel61 = wx.Panel( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-        fgSizer7 = wx.FlexGridSizer( 5, 1, 0, 0 )
+        fgSizer7 = wx.FlexGridSizer( 6, 1, 0, 0 )
         fgSizer7.SetFlexibleDirection( wx.BOTH )
         fgSizer7.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 
@@ -201,16 +201,6 @@ class OnRunUis ( wx.Frame ):
         self.date_picker_01 = wx.adv.DatePickerCtrl( self.m_panel61, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize, wx.adv.DP_DEFAULT|wx.adv.DP_DROPDOWN  )
         fgSizer91.Add( self.date_picker_01, 0, wx.ALL, 5 )
 
-        self.m_staticText8 = wx.StaticText( self.m_panel61, wx.ID_ANY, u"Choose Device", wx.DefaultPosition, wx.DefaultSize, 0 )
-        self.m_staticText8.Wrap( -1 )
-
-        fgSizer91.Add( self.m_staticText8, 0, wx.ALL, 5 )
-
-        devicelist_graphChoices = []
-        self.devicelist_graph = wx.Choice( self.m_panel61, wx.ID_ANY, wx.DefaultPosition, wx.Size( 250,-1 ), devicelist_graphChoices, 0 )
-        self.devicelist_graph.SetSelection( 0 )
-        fgSizer91.Add( self.devicelist_graph, 0, wx.ALL, 5 )
-
 
         fgSizer420.Add( fgSizer91, 1, wx.EXPAND, 5 )
         # fgSizer7.Add( fgSizer91, 1, wx.EXPAND, 5 )
@@ -221,6 +211,22 @@ class OnRunUis ( wx.Frame ):
         fgSizer7.Add( fgSizer420, 1, wx.EXPAND, 5 )
 
         ##========================================================== 111
+
+        fgSizer911 = wx.FlexGridSizer( 1, 2, 0, 0 )
+        fgSizer911.SetFlexibleDirection( wx.BOTH )
+        fgSizer911.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+
+        self.m_staticText8 = wx.StaticText( self.m_panel61, wx.ID_ANY, u"Choose Device", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText8.Wrap( -1 )
+
+        fgSizer911.Add( self.m_staticText8, 0, wx.ALL, 5 )
+
+        devicelist_graphChoices = []
+        self.devicelist_graph = wx.Choice( self.m_panel61, wx.ID_ANY, wx.DefaultPosition, wx.Size( 250,-1 ), devicelist_graphChoices, 0 )
+        self.devicelist_graph.SetSelection( 0 )
+        fgSizer911.Add( self.devicelist_graph, 0, wx.ALL, 5 )
+
+        fgSizer7.Add( fgSizer911, 1, wx.EXPAND, 5 )
 
         self.cmd_generategraph = wx.Button( self.m_panel61, wx.ID_ANY, u"Generate Graph", wx.DefaultPosition, wx.DefaultSize, 0 )
         fgSizer7.Add( self.cmd_generategraph, 0, wx.ALL, 5 )
