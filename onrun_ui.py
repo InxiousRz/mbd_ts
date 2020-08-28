@@ -142,6 +142,17 @@ class OnRunUis ( wx.Frame ):
 
         fgSizer7.Add( self.m_staticText5, 0, wx.ALL, 5 )
 
+        fgSizer81 = wx.FlexGridSizer( 2, 1, 0, 0 )
+        fgSizer81.SetFlexibleDirection( wx.BOTH )
+        fgSizer81.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+
+        m_radioBox1Choices = [ u"Single Day", u"Multiple Day" ]
+        self.m_radioBox1 = wx.RadioBox( self.m_panel61, wx.ID_ANY, u"Choose Method", wx.DefaultPosition, wx.Size( 200,-1 ), m_radioBox1Choices, 1, wx.RA_SPECIFY_COLS )
+        self.m_radioBox1.SetSelection( 1 )
+        fgSizer81.Add( self.m_radioBox1, 0, wx.ALL, 5 )
+
+        fgSizer7.Add( fgSizer81, 0, wx.ALL, 5 )
+
         ##============================================================== 111
 
         fgSizer420 = wx.FlexGridSizer( 1, 2, 0, 0 )
@@ -152,14 +163,7 @@ class OnRunUis ( wx.Frame ):
 
         ##============================================================================
 
-        fgSizer81 = wx.FlexGridSizer( 2, 1, 0, 0 )
-        fgSizer81.SetFlexibleDirection( wx.BOTH )
-        fgSizer81.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
-
-        m_radioBox1Choices = [ u"Single Day", u"Multiple Day" ]
-        self.m_radioBox1 = wx.RadioBox( self.m_panel61, wx.ID_ANY, u"Choose Method", wx.DefaultPosition, wx.Size( 200,-1 ), m_radioBox1Choices, 1, wx.RA_SPECIFY_COLS )
-        self.m_radioBox1.SetSelection( 1 )
-        fgSizer81.Add( self.m_radioBox1, 0, wx.ALL, 5 )
+        
 
         fgSizer92 = wx.FlexGridSizer( 1, 4, 0, 0 )
         fgSizer92.SetFlexibleDirection( wx.BOTH )
@@ -181,10 +185,7 @@ class OnRunUis ( wx.Frame ):
         self.datepick_end = wx.adv.DatePickerCtrl( self.m_panel61, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize, wx.adv.DP_DEFAULT|wx.adv.DP_DROPDOWN  )
         fgSizer92.Add( self.datepick_end, 0, wx.ALL, 5 )
 
-
-        fgSizer81.Add( fgSizer92, 1, wx.EXPAND, 5 )
-
-        fgSizer420.Add( fgSizer81, 1, wx.EXPAND, 5 )
+        fgSizer420.Add( fgSizer92, 1, wx.EXPAND, 5 )
         # fgSizer7.Add( fgSizer81, 1, wx.EXPAND, 5 )
         #==========================================================================================
 
@@ -211,7 +212,7 @@ class OnRunUis ( wx.Frame ):
         fgSizer91.Add( self.devicelist_graph, 0, wx.ALL, 5 )
 
 
-        fgSizer420.Add( fgSizer81, 1, wx.EXPAND, 5 )
+        fgSizer420.Add( fgSizer91, 1, wx.EXPAND, 5 )
         # fgSizer7.Add( fgSizer91, 1, wx.EXPAND, 5 )
         
 
