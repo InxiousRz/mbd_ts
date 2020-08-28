@@ -45,7 +45,7 @@ logger.addHandler(f_handler)
 class OnRunUis ( wx.Frame ):
 
     def __init__( self ):
-        self._Onrun_UI = wx.Frame(None, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 927,596 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
+        self._Onrun_UI = wx.Frame(None, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.Size( 927,626 ), style = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL )
 
         self._Onrun_UI.SetSizeHints( wx.DefaultSize, wx.DefaultSize )
         self._Onrun_UI.SetBackgroundColour( wx.Colour( 255, 255, 255 ) )
@@ -271,7 +271,7 @@ class OnRunUis ( wx.Frame ):
 
 
         self.cmd_stop6969.Disable()
-        self.setRadionewoption(None)
+        
 
 
     def threaded(fn):
@@ -451,6 +451,7 @@ class OnRunUis ( wx.Frame ):
     
     def OpenForms(self):
         self._Onrun_UI.Show()
+        self.setRadionewoption(None)
 
     def AddItemToLb(self, texts):
         if self.lb_readlog.GetCount() >= 200:
