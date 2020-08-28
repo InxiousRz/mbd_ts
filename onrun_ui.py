@@ -162,7 +162,7 @@ class OnRunUis ( wx.Frame ):
 
         fgSizer92.Add( self.m_staticText81, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
-        self.datepick_start = wx.adv.DatePickerCtrl( self.m_panel61, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize, wx.adv.DP_DEFAULT )
+        self.datepick_start = wx.adv.DatePickerCtrl( self.m_panel61, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize, wx.adv.DP_DEFAULT|wx.adv.DP_DROPDOWN  )
         fgSizer92.Add( self.datepick_start, 0, wx.ALL, 5 )
 
         self.m_staticText9 = wx.StaticText( self.m_panel61, wx.ID_ANY, u"To", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -170,7 +170,7 @@ class OnRunUis ( wx.Frame ):
 
         fgSizer92.Add( self.m_staticText9, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
 
-        self.datepick_end = wx.adv.DatePickerCtrl( self.m_panel61, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize, wx.adv.DP_DEFAULT )
+        self.datepick_end = wx.adv.DatePickerCtrl( self.m_panel61, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize, wx.adv.DP_DEFAULT|wx.adv.DP_DROPDOWN  )
         fgSizer92.Add( self.datepick_end, 0, wx.ALL, 5 )
 
 
@@ -255,6 +255,7 @@ class OnRunUis ( wx.Frame ):
 
 
         self.cmd_stop6969.Disable()
+        self.m_radioBox1.SetSelection(0)
 
 
     def threaded(fn):
