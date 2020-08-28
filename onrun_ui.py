@@ -18,6 +18,7 @@ import threading
 
 import logging
 from ui.graph_generator import GraphGen
+from ui.graph_generator2 import GraphGen2 
 
 #Logger
 # Create a custom logger
@@ -129,7 +130,7 @@ class OnRunUis ( wx.Frame ):
         ###
         
         self.m_panel61 = wx.Panel( self.m_panel1, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-        fgSizer7 = wx.FlexGridSizer( 3, 1, 0, 0 )
+        fgSizer7 = wx.FlexGridSizer( 5, 1, 0, 0 )
         fgSizer7.SetFlexibleDirection( wx.BOTH )
         fgSizer7.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 
@@ -140,6 +141,44 @@ class OnRunUis ( wx.Frame ):
         self.m_staticText5.SetForegroundColour( wx.Colour( 0, 128, 128 ) )
 
         fgSizer7.Add( self.m_staticText5, 0, wx.ALL, 5 )
+
+        ##============================================================================
+
+        fgSizer81 = wx.FlexGridSizer( 2, 1, 0, 0 )
+        fgSizer81.SetFlexibleDirection( wx.BOTH )
+        fgSizer81.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+
+        m_radioBox1Choices = [ u"Single Day", u"Multiple Day" ]
+        self.m_radioBox1 = wx.RadioBox( self.m_panel61, wx.ID_ANY, u"Choose Method", wx.DefaultPosition, wx.Size( 200,-1 ), m_radioBox1Choices, 1, wx.RA_SPECIFY_COLS )
+        self.m_radioBox1.SetSelection( 1 )
+        fgSizer81.Add( self.m_radioBox1, 0, wx.ALL, 5 )
+
+        fgSizer92 = wx.FlexGridSizer( 1, 4, 0, 0 )
+        fgSizer92.SetFlexibleDirection( wx.BOTH )
+        fgSizer92.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+
+        self.m_staticText81 = wx.StaticText( self.m_panel61, wx.ID_ANY, u"From", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText81.Wrap( -1 )
+
+        fgSizer92.Add( self.m_staticText81, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+        self.datepick_start = wx.adv.DatePickerCtrl( self.m_panel61, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize, wx.adv.DP_DEFAULT )
+        fgSizer92.Add( self.datepick_start, 0, wx.ALL, 5 )
+
+        self.m_staticText9 = wx.StaticText( self.m_panel61, wx.ID_ANY, u"To", wx.DefaultPosition, wx.DefaultSize, 0 )
+        self.m_staticText9.Wrap( -1 )
+
+        fgSizer92.Add( self.m_staticText9, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 5 )
+
+        self.datepick_end = wx.adv.DatePickerCtrl( self.m_panel61, wx.ID_ANY, wx.DefaultDateTime, wx.DefaultPosition, wx.DefaultSize, wx.adv.DP_DEFAULT )
+        fgSizer92.Add( self.datepick_end, 0, wx.ALL, 5 )
+
+
+        fgSizer81.Add( fgSizer92, 1, wx.EXPAND, 5 )
+
+
+        fgSizer7.Add( fgSizer81, 1, wx.EXPAND, 5 )
+        #==========================================================================================
 
         fgSizer91 = wx.FlexGridSizer( 3, 2, 0, 0 )
         fgSizer91.SetFlexibleDirection( wx.BOTH )
@@ -211,6 +250,7 @@ class OnRunUis ( wx.Frame ):
         self.cmd_generategraph.Bind( wx.EVT_BUTTON, self.generatedagraph )
         self.cmd_start6969.Bind( wx.EVT_BUTTON, self.StartRecord )
         self.cmd_stop6969.Bind( wx.EVT_BUTTON, self.StopRecord )
+        self.m_radioBox1.Bind( wx.EVT_RADIOBOX, self.setRadionewoption )
 
 
 
@@ -231,6 +271,28 @@ class OnRunUis ( wx.Frame ):
 
     def __del__( self ):
         pass
+
+    def setRadionewoption(self, event):
+        selected_method = self.m_radioBox1.GetSelection()
+        print(f"SELECTED >> {selected_method}")
+
+        if selected_method == 0: #Single
+            self.m_staticText81.Hide()
+            self.m_staticText9.Hide()
+            self.datepick_start.Hide()
+            self.datepick_end.Hide()
+
+            self.m_staticText7.Show()
+            self.date_picker_01.Show()
+
+        elif selected_method == 1: #Multiple
+            self.m_staticText81.Show()
+            self.m_staticText9.Show()
+            self.datepick_start.Show()
+            self.datepick_end.Show()
+
+            self.m_staticText7.Hide()
+            self.date_picker_01.Hide()
 
     @threaded
     def StartRecord(self, event):
@@ -318,18 +380,53 @@ class OnRunUis ( wx.Frame ):
 
     # @threaded
     def generatedagraph(self, event):
-        self.cmd_generategraph.Disable()
-        dates = self.date_picker_01.GetValue() #8/10/2020 12:00:00 AM
-        print(dates)
-        dates = datetime.datetime.strptime(str(dates), "%m/%d/%Y %H:%M:%S")
-        dates = str(dates.strftime("%Y-%m-%d"))
-        devices = self.devicelist_graph.GetString(self.devicelist_graph.GetSelection())
+
         
-        print(dates)
-        print(devices)
-        GraphGen(dates=dates,
-                    lives=False,
-                    devices=devices)
+        selected_method = self.m_radioBox1.GetSelection()
+
+        print(f"SELECTED TO GRAPH >> {selected_method}")
+
+        if selected_method == 0: #Single
+
+            # self.m_radioBox1.SetSelection()
+            self.cmd_generategraph.Disable()
+
+            dates = self.date_picker_01.GetValue() #8/10/2020 12:00:00 AM
+            print(dates)
+            dates = datetime.datetime.strptime(str(dates), "%m/%d/%Y %H:%M:%S")
+            dates = str(dates.strftime("%Y-%m-%d"))
+            devices = self.devicelist_graph.GetString(self.devicelist_graph.GetSelection())
+            
+            print(dates)
+            print(devices)
+            GraphGen(dates=dates,
+                        lives=False,
+                        devices=devices)
+
+        elif selected_method == 1: #Multiple
+            # self.m_radioBox1.SetSelection()
+            self.cmd_generategraph.Disable()
+
+            dates_a = self.datepick_start.GetValue() #8/10/2020 12:00:00 AM
+            print(dates_a)
+            dates_a = datetime.datetime.strptime(str(dates_a), "%m/%d/%Y %H:%M:%S")
+            dates_a = str(dates_a.strftime("%Y-%m-%d"))
+
+            dates_b = self.datepick_end.GetValue() #8/10/2020 12:00:00 AM
+            print(dates_b)
+            dates_b = datetime.datetime.strptime(str(dates_b), "%m/%d/%Y %H:%M:%S")
+            dates_b = str(dates_b.strftime("%Y-%m-%d"))
+
+
+            devices = self.devicelist_graph.GetString(self.devicelist_graph.GetSelection())
+            
+            print(dates_a)
+            print(dates_b)
+            print(devices)
+            GraphGen2(dates_a=dates_a,
+                        dates_b=dates_b,
+                        devices=devices)
+
         self.cmd_generategraph.Enable()
 
     def Destroye(self, event):

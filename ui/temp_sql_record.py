@@ -117,6 +117,54 @@ class TempQuerySQL_2():
             print(e)
             return (None)
 
+    
+    def GetDataSample2(self, devicename, recorddate, recorddate2):
+        try:
+            container = {}
+
+            sql = """
+                    --GET DATA SAMPLE
+                    SELECT
+                        recordtime,
+                        values
+                    FROM trial_datasample_rooftop
+                    WHERE devicename = %(devicename)s AND
+                    CAST(recordtime as date) BETWEEN %(recorddate)s AND %(recorddate2)s  --'2020-08-05'
+                    ORDER BY recordtime asc
+            """
+
+            params = {
+                'devicename': devicename,
+                'recorddate': recorddate,
+                'recorddate2': recorddate2
+            }
+
+            #Execute
+            ok, data, err = self.RunGeneralQuery(string_query=sql,
+                                                params=params,
+                                                types=4)
+
+            if ok:
+
+                # print(data)
+
+                #FORMAT DATA
+                for row in data:
+                    # converted_datetime = datetime.datetime.strftime(row[0],"%Y-%m-%d %H:%M:%S.%f")
+                    converted_datetime = row[0]
+                    data_detail = [converted_datetime, float(row[1])]
+                    container.update({str(row[0]): data_detail})
+
+                print(container)
+                return (container)
+            else:
+                return (None)
+
+        except Exception as e:
+            logger.error(e, exc_info=True)
+            print(e)
+            return (None)
+
 
 
 # if __name__ == "__main__":
