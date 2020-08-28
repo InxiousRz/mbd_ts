@@ -271,7 +271,7 @@ class OnRunUis ( wx.Frame ):
 
 
         self.cmd_stop6969.Disable()
-        self.m_radioBox1.SetSelection(0)
+        self.setRadionewoption(None)
 
 
     def threaded(fn):
