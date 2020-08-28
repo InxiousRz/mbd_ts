@@ -10,7 +10,6 @@ import struct
 import sys
 import wx
 import locale
-import os
 
 from temp_sql_module import TempQuerySQL
 from onrun_ui import OnRunUis
@@ -39,10 +38,6 @@ class Modbus_Mod(OnRunUis):
     def __init__(self):
         
         locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-
-        ##JSON Save
-        self._TempDataJson = {}
-        #=========================
         
         self._stoppedo_call = False
         self._stoppedo_confirm = {}
@@ -50,7 +45,6 @@ class Modbus_Mod(OnRunUis):
 
         self._startedo = False
         self._startedo_record = False
-        self._startedo_record2 = False
 
         self._modbus_activity = {}
         self._modbus_read_schedule = {}
@@ -180,7 +174,6 @@ class Modbus_Mod(OnRunUis):
 
             # self.DataReader()                
             # self.DataRecorder()
-            # self.SaveJSONLoop()
             
 
             ## WX PYTHON
@@ -331,6 +324,7 @@ class Modbus_Mod(OnRunUis):
 
             # A to B Filter
             if str(read_type).upper() == "A":
+                # print(f"========== {read_content}")
                 result = float(read_content[0])
                 if decimal_point != 0:
                     result = result / (10 ** int(decimal_point))
@@ -345,11 +339,13 @@ class Modbus_Mod(OnRunUis):
                 
                 result = ''
 
-                #New
+                #New 
                 lenght_data = len(read_content)
                 for i in range(lenght_data):
                     result += read_content[(lenght_data-1)-i]
 
+                # print(result)
+                # print(len(result))
                 result = float(struct.unpack('!f', bytes.fromhex(str(result)))[0])
 
                 #No Decimal Point for B
@@ -401,6 +397,9 @@ class Modbus_Mod(OnRunUis):
             #Port Read Thread
             self.PortReadThread(serial_port=serial_port, slave_list=slave_list)
 
+        
+
+
     @threaded
     def PortReadThread(self, serial_port, slave_list):
         print(f"START PORT READ ON {serial_port} and {slave_list}")
@@ -416,7 +415,6 @@ class Modbus_Mod(OnRunUis):
                 self.SlaveRead(serial_port=serial_port, slave_id=slave_id)
                 interval_read = float(self._config.get("MOBUS_GENERAL","interval_read"))
                 sleep(interval_read)
-
 
     # @threaded            
     def SlaveRead(self, serial_port, slave_id):
@@ -439,7 +437,6 @@ class Modbus_Mod(OnRunUis):
             #==========================
             self.AddItemToLb(f"COM-SLAVE {serial_port} - {slave_id} ::ERROR")
             #==========================
-            sleep(5)
 
         # except Exception as e:
         #     print(e)
@@ -451,47 +448,27 @@ class Modbus_Mod(OnRunUis):
         
         self._startedo_record = True
 
-        #PRELOAD LOCAL DB
-        datenow = str(datetime.date.today())
-        self._TempDataJson[str(datenow)] = self.LoadJSON(datenow)
-
         while True:
             try:
+                
+
                 #STOP
                 if self._stoppedo_call:
                     self._stoppedo_confirm_record = True
-                    self._startedo_record = False
                     return
 
                 #Check if Required To Save Record
                 if bool(int(self._config.get("MOBUS_GENERAL","save_db"))):
 
-                    datenow = str(datetime.date.today())
-                    time_record = str(datetime.datetime.now())
-
                     #save to DB
                     list_act = self._modbus_activity.keys()
+                    time_record = str(datetime.datetime.now())
                     for item in list_act:
                         item_data = self._modbus_activity[item]
                         devicename = item_data["devicename"]
                         values = self._DeviceValues_Filtered[item]
                         print(f"RECORD {devicename} :: {values}")
                         if values != None:
-                            
-                            if str(devicename) == 'PH_Sensor':
-                                try:
-                                    #Local
-                                    if self._TempDataJson.get(str(datenow)) == None:
-                                        self._TempDataJson[str(datenow)] = {}
-
-                                    # if self._TempDataJson[str(datenow)].get(devicename) == None:
-                                    #     self._TempDataJson[str(datenow)] = {}
-
-                                    self._TempDataJson[str(datenow)].update({str(time_record):values})
-                                except Exception as e:
-                                    pass
-
-                            #DB
                             self._DirectDB.InsertDataSample(devicename,time_record,values)
 
                 interval_read = float(self._config.get("MOBUS_GENERAL","interval_record"))
@@ -499,109 +476,18 @@ class Modbus_Mod(OnRunUis):
             except Exception as e:
                 logger.error(e, exc_info=True)
 
-                try:
-                    error_type = "PROGRAM"
-                    devicename = "NONE"
-                    recordtime = str(datetime.datetime.now())
-                    detailed_error = f"MODBUS RECORDING ERROR :: {e}"
-                    self._DirectDB.InsertError(error_type, devicename, recordtime, detailed_error)
-                except Exception:
-                    pass
-
+                error_type = "PROGRAM"
+                devicename = "NONE"
+                recordtime = str(datetime.datetime.now())
+                detailed_error = f"MODBUS RECORDING ERROR :: {e}"
+                self._DirectDB.InsertError(error_type, devicename, recordtime, detailed_error)
+            
                 print(e)
-                # sleep(60)
-                for i in range(int(60/6)):
-                    #STOP
-                    if self._stoppedo_call:
-                        self._stoppedo_confirm_record = True
-                        self._startedo_record = False
-                        return
-                    sleep(10)
-        
-        self._startedo_record = False
+                sleep(60)
 
-
-    def SaveJSON(self, dates, jsondata):
-        with open(f'offline_db\\{dates}.json', 'w+') as jsonfile:
-            json.dump(jsondata, jsonfile, indent=4)
-
-    def LoadJSON(self, dates):
-        if os.path.exists(f'offline_db\\{dates}.csv'):
-            with open(f'{dates}.json', 'r') as jsonfile:
-                jsondata = json.load(jsonfile)
-                return(jsondata)
-        else:
-            with open(f'offline_db\\{dates}.json', 'w+') as jsonfile:
-                json.dump({}, jsonfile, indent=4)
-
-            return({})
-
-
-    @threaded
-    def SaveJSONLoop(self):
-        
-        # sleep(10)
-
-        self._startedo_record2 = True
-
-        print("START JSON LOOP SAVE")
-        datebefore = datetime.date.today()
-        while True:
-
-            try:
-                #STOP
-                if self._stoppedo_call:
-                    self._stoppedo_confirm_record2 = True
-                    self._startedo_record2 = False
-                    return
-
-                datenow = datetime.date.today()
-
-                dategap = (datenow - datebefore).days
-                if dategap > 0:
-                    #SAVE DATEBEFORE
-                    looped = dategap
-                    for i in range(looped):
-                        date_is = datenow - datetime.timedelta(days=dategap)
-                        data = self._TempDataJson[str(date_is)]
-                        for device_name in data.keys():
-                            data_dev = data[device_name]
-                            data[device_name] = {} #Empty 'ed
-                            self.SaveJSON(date_is, data_dev)
-                        
-                        dategap -= 1
-                    
-                    #DELETE
-                    backup = self._TempDataJson[str(datenow)]
-                    self._TempDataJson = {str(datenow):backup}
-
-                    #SET DATE BEFORE
-                    datebefore = datenow
-
-                else:
-                    #SAVE DATENOW
-                    data = self._TempDataJson[str(datenow)]
-                    # for device_name in data.keys():
-                    #     data_dev = data[device_name]
-                    #     data[device_name] = {} #Empty 'ed
-                    self.SaveJSON(datenow, data)
-
-                    
-            except Exception as e:
-                logger.error(e, exc_info=True)
-                
-            # sleep(3600)
-            for i in range(int(3600/10)):
-                #STOP
-                if self._stoppedo_call:
-                    self._stoppedo_confirm_record2 = True
-                    self._startedo_record2 = False
-                    return
-                sleep(10)
-
-        self._startedo_record2 = False
 
         
+
 if __name__ == "__main__":
     APPS = wx.App(False)
     a = Modbus_Mod()
