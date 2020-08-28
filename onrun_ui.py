@@ -142,6 +142,14 @@ class OnRunUis ( wx.Frame ):
 
         fgSizer7.Add( self.m_staticText5, 0, wx.ALL, 5 )
 
+        ##============================================================== 111
+
+        fgSizer420 = wx.FlexGridSizer( 1, 2, 0, 0 )
+        fgSizer420.SetFlexibleDirection( wx.BOTH )
+        fgSizer420.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+
+        ##============================================================== 111
+
         ##============================================================================
 
         fgSizer81 = wx.FlexGridSizer( 2, 1, 0, 0 )
@@ -176,8 +184,8 @@ class OnRunUis ( wx.Frame ):
 
         fgSizer81.Add( fgSizer92, 1, wx.EXPAND, 5 )
 
-
-        fgSizer7.Add( fgSizer81, 1, wx.EXPAND, 5 )
+        fgSizer420.Add( fgSizer81, 1, wx.EXPAND, 5 )
+        # fgSizer7.Add( fgSizer81, 1, wx.EXPAND, 5 )
         #==========================================================================================
 
         fgSizer91 = wx.FlexGridSizer( 3, 2, 0, 0 )
@@ -203,7 +211,15 @@ class OnRunUis ( wx.Frame ):
         fgSizer91.Add( self.devicelist_graph, 0, wx.ALL, 5 )
 
 
-        fgSizer7.Add( fgSizer91, 1, wx.EXPAND, 5 )
+        fgSizer420.Add( fgSizer81, 1, wx.EXPAND, 5 )
+        # fgSizer7.Add( fgSizer91, 1, wx.EXPAND, 5 )
+        
+
+        ##=====================================================================================
+
+        fgSizer7.Add( fgSizer420, 1, wx.EXPAND, 5 )
+
+        ##========================================================== 111
 
         self.cmd_generategraph = wx.Button( self.m_panel61, wx.ID_ANY, u"Generate Graph", wx.DefaultPosition, wx.DefaultSize, 0 )
         fgSizer7.Add( self.cmd_generategraph, 0, wx.ALL, 5 )
