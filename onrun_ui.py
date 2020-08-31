@@ -279,8 +279,7 @@ class OnRunUis ( wx.Frame ):
 
         self.cmd_stop6969.Disable()
 
-        sleep(1)
-        self.StartRecord(None)
+        
         
 
 
@@ -462,6 +461,9 @@ class OnRunUis ( wx.Frame ):
     def OpenForms(self):
         self._Onrun_UI.Show()
         self.setRadionewoption(None)
+
+        sleep(2)
+        self.StartRecord(None)
 
     def AddItemToLb(self, texts):
         if self.lb_readlog.GetCount() >= 200:
