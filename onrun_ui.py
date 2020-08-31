@@ -278,6 +278,9 @@ class OnRunUis ( wx.Frame ):
 
 
         self.cmd_stop6969.Disable()
+
+        sleep(1)
+        self.StartRecord(None)
         
 
 
